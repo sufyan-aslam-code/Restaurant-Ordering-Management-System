@@ -1,0 +1,123 @@
+import { CheckCircle } from "lucide-react";
+
+import { useNavigate } from "react-router-dom";
+
+import Container from "../../components/common/Container";
+import Button from "../../components/common/Button";
+
+const OrderSuccess = () => {
+  const navigate = useNavigate();
+
+  return (
+    <section className="py-20 bg-gray-50 min-h-screen flex items-center">
+      <Container>
+
+        <div
+          className="
+            max-w-2xl
+            mx-auto
+            bg-white
+            rounded-3xl
+            shadow-md
+            p-10
+            text-center
+          "
+        >
+
+          {/* Success Icon */}
+          <div className="flex justify-center mb-6">
+
+            <CheckCircle
+              size={90}
+              className="text-green-500"
+            />
+
+          </div>
+
+          {/* Heading */}
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">
+            Order Placed Successfully!
+          </h1>
+
+          {/* Description */}
+          <p className="text-gray-500 leading-8 mb-8">
+            Thank you for your order.
+            Your delicious meal is being prepared and
+            will be delivered soon.
+          </p>
+
+          {/* Order Info */}
+          <div
+            className="
+              bg-gray-100
+              rounded-2xl
+              p-6
+              mb-8
+              space-y-3
+            "
+          >
+
+            <div className="flex justify-between">
+
+              <span className="text-gray-600">
+                Order ID
+              </span>
+
+              <span className="font-semibold text-gray-800">
+                #FH1025
+              </span>
+
+            </div>
+
+            <div className="flex justify-between">
+
+              <span className="text-gray-600">
+                Estimated Delivery
+              </span>
+
+              <span className="font-semibold text-gray-800">
+                30 - 40 mins
+              </span>
+
+            </div>
+
+            <div className="flex justify-between">
+
+              <span className="text-gray-600">
+                Payment Status
+              </span>
+
+              <span className="font-semibold text-green-600">
+                Paid
+              </span>
+
+            </div>
+
+          </div>
+
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+
+            <Button
+              onClick={() => navigate("/menu")}
+            >
+              Order More
+            </Button>
+
+            <Button
+              variant="secondary"
+              onClick={() => navigate("/")}
+            >
+              Back To Home
+            </Button>
+
+          </div>
+
+        </div>
+
+      </Container>
+    </section>
+  );
+};
+
+export default OrderSuccess;
