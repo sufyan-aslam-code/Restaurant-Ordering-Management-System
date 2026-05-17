@@ -1,44 +1,56 @@
+import { useEffect, useState } from "react";
+
 import Container from "../common/Container";
 import SectionHeading from "../common/SectionHeading";
 import FoodCard from "../food/FoodCard";
 
-const foods = [
-  {
-    id: 1,
-    name: "Cheese Burger",
-    price: 12,
-    image:
-      "https://images.unsplash.com/photo-1568901346375-23c9450c58cd",
-  },
-
-  {
-    id: 2,
-    name: "Pepperoni Pizza",
-    price: 18,
-    image:
-      "https://images.unsplash.com/photo-1513104890138-7c749659a591",
-  },
-
-  {
-    id: 3,
-    name: "Chicken Pasta",
-    price: 15,
-    image:
-      "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9",
-  },
-
-  {
-    id: 4,
-    name: "Cold Coffee",
-    price: 8,
-    image:
-      "https://images.unsplash.com/photo-1517701604599-bb29b565090c",
-  },
-];
-
 const FeaturedFoods = () => {
+
+  const [foods, setFoods] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+
+    const fetchFoods = async () => {
+
+      try {
+
+        const response = await fetch(
+          "https://dummyjson.com/recipes?limit=4"
+        );
+
+        const data = await response.json();
+
+        const formattedFoods =
+          data.recipes.map((item) => ({
+            id: item.id,
+            name: item.name,
+            image: item.image,
+            category: item.cuisine,
+            price:
+              Math.floor(Math.random() * 2000) + 500,
+          }));
+
+        setFoods(formattedFoods);
+
+      } catch (error) {
+
+        console.log(error);
+
+      } finally {
+
+        setLoading(false);
+
+      }
+
+    };
+
+    fetchFoods();
+
+  }, []);
+
   return (
-    <section className="py-16">
+    <section className="py-20 bg-gray-50">
 
       <Container>
 
@@ -47,16 +59,38 @@ const FeaturedFoods = () => {
           subtitle="Most popular dishes loved by customers"
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        {/* Loading */}
+        {loading ? (
 
-          {foods.map((food) => (
-            <FoodCard
-              key={food.id}
-              food={food}
-            />
-          ))}
+          <div className="text-center text-gray-500 mt-10">
+            Loading foods...
+          </div>
 
-        </div>
+        ) : (
+
+          <div
+            className="
+              grid
+              grid-cols-1
+              sm:grid-cols-2
+              lg:grid-cols-4
+              gap-8
+              mt-12
+            "
+          >
+
+            {foods.map((food) => (
+
+              <FoodCard
+                key={food.id}
+                food={food}
+              />
+
+            ))}
+
+          </div>
+
+        )}
 
       </Container>
 

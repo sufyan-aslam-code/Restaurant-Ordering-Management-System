@@ -1,53 +1,174 @@
 import { useNavigate } from "react-router-dom";
 
+import {
+  Mail,
+  ShieldCheck,
+} from "lucide-react";
+
 import Button from "../../components/common/Button";
 import Container from "../../components/common/Container";
 import Input from "../../components/common/Input";
 
 const ForgotPassword = () => {
+
   const navigate = useNavigate();
 
   return (
-    <section className="py-20">
+    <section
+      className="
+        min-h-screen
+        bg-gradient-to-br
+        from-orange-50
+        via-white
+        to-orange-100
+        flex
+        items-center
+        justify-center
+        py-16
+      "
+    >
+
       <Container>
 
-        <div className="max-w-md mx-auto bg-white shadow-md rounded-2xl p-8">
+        <div
+          className="
+            max-w-lg
+            mx-auto
+            bg-white/90
+            backdrop-blur-xl
+            shadow-2xl
+            rounded-3xl
+            border
+            border-white/40
+            p-10
+          "
+        >
 
-          <div className="text-center mb-8">
+          {/* Icon */}
+          <div className="flex justify-center mb-6">
 
-            <h1 className="text-3xl font-bold text-gray-800">
+            <div
+              className="
+                w-20
+                h-20
+                rounded-3xl
+                bg-orange-500
+                flex
+                items-center
+                justify-center
+                shadow-lg
+              "
+            >
+
+              <ShieldCheck
+                size={38}
+                className="text-white"
+              />
+
+            </div>
+
+          </div>
+
+          {/* Heading */}
+          <div className="text-center mb-10">
+
+            <h1
+              className="
+                text-4xl
+                font-bold
+                text-gray-900
+                mb-3
+              "
+            >
               Forgot Password
             </h1>
 
-            <p className="text-gray-500 mt-2">
-              Enter your email to receive verification PIN
+            <p
+              className="
+                text-gray-500
+                text-lg
+                leading-relaxed
+              "
+            >
+              Enter your email address to receive
+              a verification PIN for resetting
+              your password.
             </p>
 
           </div>
 
+          {/* Form */}
           <form
-            className="space-y-5"
+            className="space-y-6"
             onSubmit={(e) => {
+
               e.preventDefault();
 
               navigate("/verify-pin");
+
             }}
           >
 
-            <Input
-              type="email"
-              placeholder="Enter your email"
-            />
+            {/* Email */}
+            <div className="relative">
 
-            <Button type="submit" className="w-full">
-              Send PIN
+              <Mail
+                size={20}
+                className="
+                  absolute
+                  left-4
+                  top-1/2
+                  -translate-y-1/2
+                  text-gray-400
+                "
+              />
+
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                className="
+                  pl-12
+                  py-4
+                  rounded-2xl
+                "
+              />
+
+            </div>
+
+            {/* Button */}
+            <Button
+              type="submit"
+              className="
+                w-full
+                py-4
+                rounded-2xl
+                text-lg
+                shadow-lg
+              "
+            >
+              Send Verification PIN
             </Button>
 
           </form>
 
+          {/* Bottom Text */}
+          <p
+            className="
+              text-center
+              text-gray-400
+              text-sm
+              mt-8
+              leading-relaxed
+            "
+          >
+            We&apos;ll send a secure verification
+            code to your registered email address.
+          </p>
+
         </div>
 
       </Container>
+
     </section>
   );
 };

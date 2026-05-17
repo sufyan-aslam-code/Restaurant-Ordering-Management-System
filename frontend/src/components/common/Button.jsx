@@ -4,12 +4,14 @@ const Button = ({
   variant = "primary",
   onClick,
   className = "",
+  disabled = false,
 }) => {
 
   const baseStyles =
-    "px-6 py-3 rounded-xl font-semibold transition duration-300";
+    "font-semibold transition duration-300 flex items-center justify-center";
 
   const variants = {
+
     primary:
       "bg-orange-500 hover:bg-orange-600 text-white",
 
@@ -18,13 +20,20 @@ const Button = ({
 
     dark:
       "bg-gray-900 hover:bg-black text-white",
+
   };
 
   return (
     <button
       type={type}
       onClick={onClick}
-      className={`${baseStyles} ${variants[variant]} ${className}`}
+      disabled={disabled}
+      className={`
+        ${baseStyles}
+        ${variants[variant] || ""}
+        ${disabled ? "opacity-50 cursor-not-allowed" : ""}
+        ${className}
+      `}
     >
       {children}
     </button>

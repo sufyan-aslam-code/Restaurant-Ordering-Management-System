@@ -1,36 +1,94 @@
+import { useNavigate } from "react-router-dom";
+
 import Button from "../common/Button";
 import Container from "../common/Container";
 
 const HeroSection = () => {
+
+  const navigate = useNavigate();
+
   return (
-    <section className="py-20">
+    <section
+      className="
+        py-20
+        bg-gradient-to-br
+        from-orange-50
+        to-white
+      "
+    >
 
       <Container>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-12">
+        <div
+          className="
+            grid
+            grid-cols-1
+            lg:grid-cols-2
+            gap-14
+            items-center
+          "
+        >
 
-          {/* Left Content */}
+          {/* Left Side */}
           <div>
 
-            <h1 className="text-5xl md:text-6xl font-bold leading-tight text-gray-900">
-              Delicious Food,
+            <span
+              className="
+                inline-block
+                bg-orange-100
+                text-orange-500
+                px-4
+                py-2
+                rounded-full
+                text-sm
+                font-semibold
+                mb-6
+              "
+            >
+              Fast Delivery & Fresh Food
+            </span>
+
+            <h1
+              className="
+                text-5xl
+                lg:text-6xl
+                font-bold
+                leading-tight
+                text-gray-900
+              "
+            >
+              Delicious Food
               <span className="text-orange-500">
                 {" "}Delivered Fast
               </span>
             </h1>
 
-            <p className="mt-6 text-lg text-gray-600 leading-relaxed">
-              Order your favorite meals from the best restaurants
-              near you with fast delivery and amazing taste.
+            <p
+              className="
+                mt-6
+                text-lg
+                text-gray-600
+                leading-8
+                max-w-xl
+              "
+            >
+              Order your favorite meals from
+              top restaurants near you with
+              fast delivery and amazing taste.
             </p>
 
-            <div className="mt-8 flex items-center gap-4">
+            <div className="flex items-center gap-4 mt-8">
 
-              <Button>
+              <Button
+                onClick={() => navigate("/menu")}
+              >
                 Order Now
               </Button>
 
-              <Button variant="secondary">
+              <Button
+                variant="secondary"
+                onClick={() => navigate("/menu")}
+              >
                 Explore Menu
               </Button>
 
@@ -38,13 +96,19 @@ const HeroSection = () => {
 
           </div>
 
-          {/* Right Content */}
-          <div className="flex justify-center">
+          {/* Right Side */}
+          <div>
 
             <img
               src="https://images.unsplash.com/photo-1504674900247-0877df9cc836"
               alt="Food"
-              className="w-full max-w-lg rounded-3xl shadow-xl object-cover"
+              className="
+                w-full
+                h-[500px]
+                object-cover
+                rounded-3xl
+                shadow-xl
+              "
             />
 
           </div>
