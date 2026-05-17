@@ -1,4 +1,5 @@
 import { useContext } from "react";
+import { useCart } from "../../context/CartContext";
 
 import { NavLink } from "react-router-dom";
 
@@ -40,14 +41,21 @@ const navLinks = [
 ];
 
 const Navbar = () => {
+
   const { darkMode, toggleTheme } =
     useContext(ThemeContext);
+
+  const { totalQuantity } = useCart();
 
   return (
     <nav
       className="
+        sticky
+        top-0
+        z-50
         w-full
-        bg-white
+        bg-white/90
+        backdrop-blur-md
         border-b
         border-gray-200
         shadow-sm
@@ -138,45 +146,36 @@ const Navbar = () => {
               <ShoppingCart size={20} />
 
               {/* Cart Count */}
-              <span
-                className="
-                  absolute
-                  -top-2
-                  -right-2
-                  bg-orange-500
-                  text-white
-                  text-xs
-                  w-5
-                  h-5
-                  flex
-                  items-center
-                  justify-center
-                  rounded-full
-                "
-              >
-                0
-              </span>
+              {
+                totalQuantity > 0 && (
+                  <span
+                    className="
+                      absolute
+                      -top-2
+                      -right-2
+                      bg-orange-500
+                      text-white
+                      text-xs
+                      w-5
+                      h-5
+                      flex
+                      items-center
+                      justify-center
+                      rounded-full
+                    "
+                  >
+                    {totalQuantity}
+                  </span>
+                )
+              }
 
             </NavLink>
 
             {/* Login */}
-            <NavLink
-              to="/login"
-              className="
-                text-gray-700
-                hover:text-orange-500
-                font-medium
-                transition
-              "
-            >
-              Login
-            </NavLink>
+            <NavLink to="/login">
 
-            {/* Register */}
-            <NavLink to="/register">
-
-              <Button>
-                Sign Up
+              <Button className="px-5 py-2 rounded-xl">
+                Login
               </Button>
 
             </NavLink>
