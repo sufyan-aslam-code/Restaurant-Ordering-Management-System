@@ -14,6 +14,9 @@ const HeroSection = () => {
         bg-gradient-to-br
         from-orange-50
         to-white
+        dark:from-slate-950
+        dark:via-slate-900
+        dark:to-slate-950
       "
     >
 
@@ -55,6 +58,7 @@ const HeroSection = () => {
                 font-bold
                 leading-tight
                 text-gray-900
+                dark:text-gray-100
               "
             >
               Delicious Food
@@ -68,6 +72,7 @@ const HeroSection = () => {
                 mt-6
                 text-lg
                 text-gray-600
+                dark:text-gray-400
                 leading-8
                 max-w-xl
               "
@@ -77,10 +82,19 @@ const HeroSection = () => {
               fast delivery and amazing taste.
             </p>
 
-            <div className="flex items-center gap-4 mt-8">
+            <div className="flex flex-wrap items-center gap-4 mt-8">
 
               <Button
                 onClick={() => navigate("/menu")}
+                className="
+                  px-7
+                  py-3
+                  rounded-xl
+                  text-base
+                  shadow-lg
+                  shadow-orange-200/60
+                  hover:-translate-y-0.5
+                "
               >
                 Order Now
               </Button>
@@ -88,6 +102,13 @@ const HeroSection = () => {
               <Button
                 variant="secondary"
                 onClick={() => navigate("/menu")}
+                className="
+                  px-7
+                  py-3
+                  rounded-xl
+                  text-base
+                  border-2
+                "
               >
                 Explore Menu
               </Button>
@@ -99,17 +120,21 @@ const HeroSection = () => {
           {/* Right Side */}
           <div>
 
-            <img
-              src="https://images.unsplash.com/photo-1504674900247-0877df9cc836"
-              alt="Food"
-              className="
-                w-full
-                h-[500px]
-                object-cover
-                rounded-3xl
-                shadow-xl
-              "
-            />
+            <div className="relative rounded-3xl overflow-hidden shadow-xl">
+              <img
+                src="https://images.unsplash.com/photo-1504674900247-0877df9cc836"
+                alt="Food"
+                className="
+                  w-full
+                  h-125
+                  object-cover
+                  dark:brightness-75
+                  dark:saturate-75
+                "
+              />
+
+              <div className="absolute inset-0 bg-black/0 dark:bg-black/20" />
+            </div>
 
           </div>
 

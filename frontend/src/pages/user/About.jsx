@@ -24,6 +24,9 @@ const About = () => {
         from-orange-50
         via-white
         to-orange-100
+        dark:from-slate-950
+        dark:via-slate-900
+        dark:to-slate-950
       "
     >
 
@@ -36,6 +39,7 @@ const About = () => {
             className="
               inline-block
               bg-orange-100
+                dark:bg-orange-500/15
               text-orange-500
               font-semibold
               px-5
@@ -52,6 +56,7 @@ const About = () => {
               text-5xl
               font-bold
               text-gray-900
+                dark:text-gray-100
               mb-6
             "
           >
@@ -64,6 +69,7 @@ const About = () => {
               mx-auto
               text-lg
               text-gray-500
+                dark:text-gray-400
               leading-8
             "
           >
@@ -101,13 +107,14 @@ const About = () => {
                 bottom-6
                 left-6
                 bg-white/90
+                theme-surface
                 backdrop-blur-xl
                 rounded-2xl
                 shadow-xl
                 px-6
                 py-4
                 border
-                border-white/40
+                border-white/40 dark:border-gray-700
               "
             >
 
@@ -120,11 +127,11 @@ const About = () => {
 
                 <div>
 
-                  <h3 className="font-bold text-gray-900">
+                  <h3 className="font-bold text-gray-900 dark:text-gray-100">
                     Trusted By Thousands
                   </h3>
 
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Fast delivery & premium meals
                   </p>
 
@@ -143,6 +150,7 @@ const About = () => {
               className="
                 inline-block
                 bg-orange-100
+                dark:bg-orange-500/15
                 text-orange-500
                 font-semibold
                 px-4
@@ -159,6 +167,7 @@ const About = () => {
                 text-4xl
                 font-bold
                 text-gray-900
+                dark:text-gray-100
                 mb-6
                 leading-tight
               "
@@ -170,6 +179,7 @@ const About = () => {
             <p
               className="
                 text-gray-500
+                dark:text-gray-400
                 leading-8
                 text-lg
                 mb-6
@@ -184,6 +194,7 @@ const About = () => {
             <p
               className="
                 text-gray-500
+                dark:text-gray-400
                 leading-8
                 text-lg
                 mb-10
@@ -222,11 +233,11 @@ const About = () => {
 
                 <div>
 
-                  <h3 className="font-semibold text-gray-900 mb-1">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
                     Premium Food Quality
                   </h3>
 
-                  <p className="text-gray-500">
+                  <p className="text-gray-500 dark:text-gray-400">
                     Freshly prepared meals from
                     trusted restaurants.
                   </p>
@@ -259,11 +270,11 @@ const About = () => {
 
                 <div>
 
-                  <h3 className="font-semibold text-gray-900 mb-1">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
                     Fast Delivery
                   </h3>
 
-                  <p className="text-gray-500">
+                  <p className="text-gray-500 dark:text-gray-400">
                     Quick and reliable doorstep
                     delivery service.
                   </p>
@@ -296,11 +307,11 @@ const About = () => {
 
                 <div>
 
-                  <h3 className="font-semibold text-gray-900 mb-1">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
                     Safe & Secure Ordering
                   </h3>
 
-                  <p className="text-gray-500">
+                  <p className="text-gray-500 dark:text-gray-400">
                     Secure payments and smooth
                     ordering experience.
                   </p>
@@ -333,11 +344,11 @@ const About = () => {
 
                 <div>
 
-                  <h3 className="font-semibold text-gray-900 mb-1">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
                     24/7 Availability
                   </h3>
 
-                  <p className="text-gray-500">
+                  <p className="text-gray-500 dark:text-gray-400">
                     Order your favorite meals
                     anytime you want.
                   </p>

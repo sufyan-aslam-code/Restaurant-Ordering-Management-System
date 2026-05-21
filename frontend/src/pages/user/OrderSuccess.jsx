@@ -1,12 +1,23 @@
 import { CheckCircle } from "lucide-react";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import Container from "../../components/common/Container";
 import Button from "../../components/common/Button";
 
 const OrderSuccess = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const order = location.state?.order;
+
+  const trackingId = order?.trackingId || "Not available";
+  const estimatedDelivery = order?.estimatedDeliveryMinutes
+    ? `${order.estimatedDeliveryMinutes} mins`
+    : "30 - 40 mins";
+  const paymentStatus = order?.paymentStatus
+    ? order.paymentStatus[0].toUpperCase() + order.paymentStatus.slice(1)
+    : "Paid";
 
   return (
     <section className="py-20 bg-gray-50 min-h-screen flex items-center">
@@ -64,7 +75,7 @@ const OrderSuccess = () => {
               </span>
 
               <span className="font-semibold text-gray-800">
-                #FH1025
+                {trackingId}
               </span>
 
             </div>
@@ -76,7 +87,7 @@ const OrderSuccess = () => {
               </span>
 
               <span className="font-semibold text-gray-800">
-                30 - 40 mins
+                {estimatedDelivery}
               </span>
 
             </div>
@@ -88,7 +99,7 @@ const OrderSuccess = () => {
               </span>
 
               <span className="font-semibold text-green-600">
-                Paid
+                {paymentStatus}
               </span>
 
             </div>
@@ -100,15 +111,17 @@ const OrderSuccess = () => {
 
             <Button
               onClick={() => navigate("/menu")}
+              className="min-w-45"
             >
               Order More
             </Button>
 
             <Button
               variant="secondary"
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/profile#orders")}
+              className="min-w-45"
             >
-              Back To Home
+              View My Orders
             </Button>
 
           </div>
