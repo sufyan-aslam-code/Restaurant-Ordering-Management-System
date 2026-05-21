@@ -8,18 +8,18 @@ const Button = ({
 }) => {
 
   const baseStyles =
-    "font-semibold transition duration-300 flex items-center justify-center";
+    "font-semibold transition duration-300 flex items-center justify-center px-6 py-3 rounded-lg gap-2 hover:shadow-lg hover:shadow-orange-200/60";
 
   const variants = {
 
     primary:
-      "bg-orange-500 hover:bg-orange-600 text-white",
+      "bg-orange-500 hover:bg-orange-600 text-white shadow-md shadow-orange-200/60",
 
     secondary:
-      "border border-gray-300 hover:border-orange-500 hover:text-orange-500 text-gray-700",
+      "border-2 border-orange-500 bg-white dark:bg-slate-900 hover:bg-orange-50 dark:hover:bg-slate-800 hover:shadow-md text-orange-600 dark:text-orange-400 font-semibold",
 
     dark:
-      "bg-gray-900 hover:bg-black text-white",
+      "bg-gray-900 hover:bg-black text-white shadow-md",
 
   };
 

@@ -1,12 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import axios from "axios";
 
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Search } from "lucide-react";
 
 import Container from "../../components/common/Container";
 import Button from "../../components/common/Button";
@@ -18,6 +15,8 @@ const ITEMS_PER_PAGE = 8;
 
 const Menu = () => {
 
+  const [searchParams] = useSearchParams();
+
   const [foods, setFoods] = useState([]);
 
   const [loading, setLoading] = useState(true);
@@ -26,6 +25,9 @@ const Menu = () => {
     useState("All");
 
   const [searchTerm, setSearchTerm] =
+    useState("");
+
+  const [presetTerms, setPresetTerms] =
     useState("");
 
   const [currentPage, setCurrentPage] =
@@ -60,6 +62,15 @@ const Menu = () => {
 
             image: item.image,
 
+            cuisine:
+              item.cuisine || "",
+
+            tags:
+              item.tags || [],
+
+            description:
+              item.instructions?.slice(0, 2).join(" "),
+
           }));
 
         setFoods(formattedFoods);
@@ -80,6 +91,14 @@ const Menu = () => {
 
   }, []);
 
+  useEffect(() => {
+    const query = searchParams.get("q") || "";
+    const terms = searchParams.get("terms") || "";
+    setSelectedCategory("All");
+    setSearchTerm(query);
+    setPresetTerms(terms);
+  }, [searchParams]);
+
   // Dynamic Categories
   const categories = useMemo(() => {
 
@@ -95,15 +114,50 @@ const Menu = () => {
 
   // Filtering
   const filteredFoods = foods.filter((food) => {
+    const normalizedSearchTerm =
+      searchTerm.toLowerCase().trim();
+
+    const normalizedPresetTerms =
+      presetTerms.toLowerCase().trim();
+
+    const queryTerms =
+      normalizedSearchTerm
+        .split("|")
+        .map((term) => term.trim())
+        .filter(Boolean);
+
+    const presetQueryTerms =
+      normalizedPresetTerms
+        .split("|")
+        .map((term) => term.trim())
+        .filter(Boolean);
+
+    const activeQueryTerms =
+      [...new Set([
+        ...queryTerms,
+        ...presetQueryTerms,
+      ])];
+
+    const searchableText =
+      [
+        food.name,
+        food.category,
+        food.cuisine,
+        food.description,
+        ...(food.tags || []),
+      ]
+        .join(" ")
+        .toLowerCase();
 
     const matchesCategory =
       selectedCategory === "All" ||
       food.category === selectedCategory;
 
     const matchesSearch =
-      food.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+      activeQueryTerms.length === 0 ||
+      activeQueryTerms.some((term) =>
+        searchableText.includes(term)
+      );
 
     return matchesCategory && matchesSearch;
 
@@ -164,9 +218,10 @@ const Menu = () => {
             type="text"
             placeholder="Search food items..."
             value={searchTerm}
-            onChange={(e) =>
-              setSearchTerm(e.target.value)
-            }
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPresetTerms("");
+            }}
             className="pl-12 py-4"
           />
 
@@ -298,7 +353,7 @@ const Menu = () => {
                     hover:text-orange-500
                   "
                 >
-                  <ChevronLeft size={20} />
+                  <span className="text-xl font-semibold">‹</span>
                 </Button>
 
                 {/* Page Numbers */}
@@ -365,7 +420,7 @@ const Menu = () => {
                     hover:text-orange-500
                   "
                 >
-                  <ChevronRight size={20} />
+                  <span className="text-xl font-semibold">›</span>
                 </Button>
 
               </div>

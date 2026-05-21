@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 import {
   LockKeyhole,
@@ -8,17 +9,67 @@ import {
 import Button from "../../components/common/Button";
 import Container from "../../components/common/Container";
 import Input from "../../components/common/Input";
+import { loginUser } from "../../api/auth";
+import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
+
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    setFormData((currentFormData) => ({
+      ...currentFormData,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await loginUser(formData);
+
+      login({
+        accessToken: response.data.accessToken,
+        user: response.data.user,
+      });
+
+      navigate(response.data.user.role === "admin" ? "/admin" : "/");
+    } catch (requestError) {
+      setError(
+        requestError?.response?.data?.message ||
+          "Unable to log in right now. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <section
       className="
         min-h-screen
-        bg-gradient-to-br
+        bg-linear-to-br
         from-orange-50
         via-white
         to-orange-100
+        dark:from-slate-950
+        dark:via-slate-900
+        dark:to-slate-950
         flex
         items-center
         justify-center
@@ -33,11 +84,13 @@ const Login = () => {
             max-w-lg
             mx-auto
             bg-white/90
+            dark:bg-slate-800/90
+            theme-surface
             backdrop-blur-xl
             shadow-2xl
             rounded-3xl
             border
-            border-white/40
+            border-white/40 dark:border-gray-700
             p-10
           "
         >
@@ -75,6 +128,7 @@ const Login = () => {
                 text-4xl
                 font-bold
                 text-gray-900
+                dark:text-gray-100
                 mb-3
               "
             >
@@ -84,6 +138,7 @@ const Login = () => {
             <p
               className="
                 text-gray-500
+                dark:text-gray-400
                 text-lg
                 leading-relaxed
               "
@@ -95,7 +150,13 @@ const Login = () => {
           </div>
 
           {/* Form */}
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+
+            {error ? (
+              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            ) : null}
 
             {/* Email */}
             <div className="relative">
@@ -113,6 +174,9 @@ const Login = () => {
 
               <Input
                 type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
                 placeholder="Enter your email"
                 className="pl-12 py-4 rounded-2xl"
               />
@@ -135,6 +199,9 @@ const Login = () => {
 
               <Input
                 type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
                 placeholder="Enter your password"
                 className="pl-12 py-4 rounded-2xl"
               />
@@ -161,6 +228,8 @@ const Login = () => {
 
             {/* Login Button */}
             <Button
+              type="submit"
+              disabled={loading}
               className="
                 w-full
                 py-4
@@ -169,7 +238,7 @@ const Login = () => {
                 shadow-lg
               "
             >
-              Login
+              {loading ? "Logging in..." : "Login"}
             </Button>
 
           </form>
@@ -177,13 +246,13 @@ const Login = () => {
           {/* Divider */}
           <div className="flex items-center gap-4 my-8">
 
-            <div className="flex-1 h-px bg-gray-200" />
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
 
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-gray-400 dark:text-gray-500">
               OR
             </span>
 
-            <div className="flex-1 h-px bg-gray-200" />
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
 
           </div>
 
@@ -192,6 +261,7 @@ const Login = () => {
             className="
               text-center
               text-gray-500
+              dark:text-gray-400
               text-base
             "
           >
@@ -201,6 +271,7 @@ const Login = () => {
               to="/register"
               className="
                 text-orange-500
+                dark:text-orange-400
                 font-semibold
                 hover:text-orange-600
                 transition

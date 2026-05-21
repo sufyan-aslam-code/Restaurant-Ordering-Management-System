@@ -16,7 +16,7 @@ const FeaturedFoods = () => {
       try {
 
         const response = await fetch(
-          "https://dummyjson.com/recipes?limit=4"
+          "https://dummyjson.com/recipes?limit=8"
         );
 
         const data = await response.json();
@@ -27,6 +27,8 @@ const FeaturedFoods = () => {
             name: item.name,
             image: item.image,
             category: item.cuisine,
+            description:
+              item.instructions?.slice(0, 2).join(" "),
             price:
               Math.floor(Math.random() * 2000) + 500,
           }));
@@ -50,7 +52,7 @@ const FeaturedFoods = () => {
   }, []);
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-20 bg-gray-50 dark:bg-slate-900">
 
       <Container>
 
@@ -62,7 +64,7 @@ const FeaturedFoods = () => {
         {/* Loading */}
         {loading ? (
 
-          <div className="text-center text-gray-500 mt-10">
+          <div className="text-center text-gray-500 dark:text-gray-400 mt-10">
             Loading foods...
           </div>
 

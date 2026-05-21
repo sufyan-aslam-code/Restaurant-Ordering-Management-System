@@ -1,1 +1,65 @@
 @import "tailwindcss";
+
+/* Ensure dark: utilities are controlled by app theme state, not OS color scheme. */
+@custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
+
+/* Global theme variables (light by default). When the `dark` class is set on <html>,
+	 the dark variables will apply. This gives a quick global dark-mode without
+	 touching every component. */
+:root {
+	--bg: #f8fafc;
+	--card: #ffffff;
+	--text: #0f1724;
+	--muted: #6b7280;
+	--border: #e5e7eb;
+	--accent: #f97316;
+	--muted-bg: rgba(15, 23, 36, 0.04);
+}
+
+:root.dark,
+:root[data-theme="dark"] {
+	--bg: #0b1220;
+	--card: #0f1724;
+	--text: #e6eef8;
+	--muted: #9ca3af;
+	--border: #1f2937;
+	--accent: #fb923c;
+	--muted-bg: rgba(255,255,255,0.02);
+}
+
+html, body, #root {
+	background-color: var(--bg);
+	color: var(--text);
+}
+
+/* Quick overrides for common Tailwind utility classes so existing markup adapts */
+.bg-white { background-color: var(--card) !important; }
+.bg-gray-50 { background-color: var(--bg) !important; }
+.bg-gray-100 { background-color: var(--muted-bg) !important; }
+.text-gray-800 { color: var(--text) !important; }
+.text-gray-700 { color: var(--text) !important; }
+.text-gray-500 { color: var(--muted) !important; }
+.border-gray-200 { border-color: var(--border) !important; }
+.border-gray-100 { border-color: var(--border) !important; }
+.text-gray-900 { color: var(--text) !important; }
+.border-gray-300 { border-color: var(--border) !important; }
+.shadow-sm { box-shadow: 0 1px 2px rgba(2,6,23,0.06) !important; }
+
+/* Accent overrides */
+.bg-orange-500 { background-color: var(--accent) !important; }
+.text-orange-500 { color: var(--accent) !important; }
+
+/* Form inputs override */
+.bg-gray-100 { background-color: var(--muted-bg) !important; }
+.cursor-not-allowed { opacity: 0.8 !important; }
+
+/* Small helpers */
+.hover\:bg-orange-50:hover { background-color: rgba(251,146,60,0.06) !important; }
+
+.theme-surface {
+	background-color: var(--card) !important;
+}
+
+.theme-surface-soft {
+	background-color: var(--muted-bg) !important;
+}

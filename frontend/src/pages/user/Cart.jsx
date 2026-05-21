@@ -1,8 +1,6 @@
 import { Link } from "react-router-dom";
 
 import {
-  Minus,
-  Plus,
   Trash2,
   ShoppingBag,
   ArrowRight,
@@ -277,7 +275,7 @@ const Cart = () => {
                       "
                     >
 
-                      <Minus size={16} />
+                      <span className="text-xl font-bold leading-none">-</span>
 
                     </Button>
 
@@ -311,7 +309,7 @@ const Cart = () => {
                       "
                     >
 
-                      <Plus size={16} />
+                      <span className="text-xl font-bold leading-none">+</span>
 
                     </Button>
 

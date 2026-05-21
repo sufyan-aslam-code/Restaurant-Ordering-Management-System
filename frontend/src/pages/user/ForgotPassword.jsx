@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 import {
   Mail,
@@ -8,19 +8,46 @@ import {
 import Button from "../../components/common/Button";
 import Container from "../../components/common/Container";
 import Input from "../../components/common/Input";
+import { requestPasswordReset } from "../../api/auth";
 
 const ForgotPassword = () => {
 
-  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    setLoading(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const response = await requestPasswordReset({ email });
+      setMessage(response.data.message);
+    } catch (requestError) {
+      setError(
+        requestError?.response?.data?.message ||
+          "Unable to send the reset link right now."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <section
       className="
         min-h-screen
-        bg-gradient-to-br
+        bg-linear-to-br
         from-orange-50
         via-white
         to-orange-100
+        dark:from-slate-950
+        dark:via-slate-900
+        dark:to-slate-950
         flex
         items-center
         justify-center
@@ -35,11 +62,13 @@ const ForgotPassword = () => {
             max-w-lg
             mx-auto
             bg-white/90
+            dark:bg-slate-800/90
+            theme-surface
             backdrop-blur-xl
             shadow-2xl
             rounded-3xl
             border
-            border-white/40
+            border-white/40 dark:border-gray-700
             p-10
           "
         >
@@ -77,6 +106,7 @@ const ForgotPassword = () => {
                 text-4xl
                 font-bold
                 text-gray-900
+                dark:text-gray-100
                 mb-3
               "
             >
@@ -86,6 +116,7 @@ const ForgotPassword = () => {
             <p
               className="
                 text-gray-500
+                dark:text-gray-400
                 text-lg
                 leading-relaxed
               "
@@ -98,16 +129,19 @@ const ForgotPassword = () => {
           </div>
 
           {/* Form */}
-          <form
-            className="space-y-6"
-            onSubmit={(e) => {
+          <form className="space-y-6" onSubmit={handleSubmit}>
 
-              e.preventDefault();
+            {message ? (
+              <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                {message}
+              </div>
+            ) : null}
 
-              navigate("/verify-pin");
-
-            }}
-          >
+            {error ? (
+              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            ) : null}
 
             {/* Email */}
             <div className="relative">
@@ -125,6 +159,8 @@ const ForgotPassword = () => {
 
               <Input
                 type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
                 placeholder="Enter your email"
                 className="
                   pl-12
@@ -138,6 +174,7 @@ const ForgotPassword = () => {
             {/* Button */}
             <Button
               type="submit"
+              disabled={loading}
               className="
                 w-full
                 py-4
@@ -146,7 +183,7 @@ const ForgotPassword = () => {
                 shadow-lg
               "
             >
-              Send Verification PIN
+              {loading ? "Sending Link..." : "Send Reset Link"}
             </Button>
 
           </form>
@@ -156,6 +193,7 @@ const ForgotPassword = () => {
             className="
               text-center
               text-gray-400
+              dark:text-gray-500
               text-sm
               mt-8
               leading-relaxed

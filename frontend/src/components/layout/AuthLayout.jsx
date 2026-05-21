@@ -11,7 +11,7 @@ const AuthLayout = () => {
       <main
         className="
           min-h-screen
-          bg-gray-50
+          bg-gray-50 dark:bg-slate-950
         "
       >
         <Outlet />
