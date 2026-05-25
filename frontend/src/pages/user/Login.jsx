@@ -4,6 +4,9 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   LockKeyhole,
   Mail,
+  Eye,
+  EyeOff,
+  AlertCircle,
 } from "lucide-react";
 
 import Button from "../../components/common/Button";
@@ -24,6 +27,32 @@ const Login = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateForm = () => {
+    const errors = {};
+
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!validateEmail(formData.email)) {
+      errors.email = "Please enter a valid email address";
+    }
+
+    if (!formData.password) {
+      errors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      errors.password = "Password must be at least 6 characters";
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -32,10 +61,22 @@ const Login = () => {
       ...currentFormData,
       [name]: value,
     }));
+
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
 
     setLoading(true);
     setError("");
@@ -58,6 +99,8 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  const isFormValid = formData.email.trim() !== "" && formData.password !== "";
 
   return (
     <section
@@ -153,59 +196,97 @@ const Login = () => {
           <form className="space-y-6" onSubmit={handleSubmit}>
 
             {error ? (
-              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {error}
+              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 flex items-start gap-3">
+                <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
+                <span>{error}</span>
               </div>
             ) : null}
 
             {/* Email */}
-            <div className="relative">
+            <div>
+              <div className="relative">
 
-              <Mail
-                size={20}
-                className="
-                  absolute
-                  left-4
-                  top-1/2
-                  -translate-y-1/2
-                  text-gray-400
-                "
-              />
+                <Mail
+                  size={20}
+                  className="
+                    absolute
+                    left-4
+                    top-1/2
+                    -translate-y-1/2
+                    text-gray-400
+                  "
+                />
 
-              <Input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Enter your email"
-                className="pl-12 py-4 rounded-2xl"
-              />
+                <Input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="Enter your email"
+                  className={`pl-12 py-4 rounded-2xl ${fieldErrors.email ? "border-red-500" : ""}`}
+                />
 
+              </div>
+              {fieldErrors.email && (
+                <p className="text-red-500 text-sm mt-2 flex items-center gap-1">
+                  <AlertCircle size={14} />
+                  {fieldErrors.email}
+                </p>
+              )}
             </div>
 
             {/* Password */}
-            <div className="relative">
+            <div>
+              <div className="relative">
 
-              <LockKeyhole
-                size={20}
-                className="
-                  absolute
-                  left-4
-                  top-1/2
-                  -translate-y-1/2
-                  text-gray-400
-                "
-              />
+                <LockKeyhole
+                  size={20}
+                  className="
+                    absolute
+                    left-4
+                    top-1/2
+                    -translate-y-1/2
+                    text-gray-400
+                  "
+                />
 
-              <Input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter your password"
-                className="pl-12 py-4 rounded-2xl"
-              />
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Enter your password"
+                  className={`pl-12 pr-12 py-4 rounded-2xl ${fieldErrors.password ? "border-red-500" : ""}`}
+                />
 
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="
+                    absolute
+                    right-4
+                    top-1/2
+                    -translate-y-1/2
+                    text-gray-400
+                    hover:text-gray-600
+                    dark:hover:text-gray-300
+                    transition
+                  "
+                >
+                  {showPassword ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
+                </button>
+
+              </div>
+              {fieldErrors.password && (
+                <p className="text-red-500 text-sm mt-2 flex items-center gap-1">
+                  <AlertCircle size={14} />
+                  {fieldErrors.password}
+                </p>
+              )}
             </div>
 
             {/* Forgot Password */}
@@ -229,13 +310,15 @@ const Login = () => {
             {/* Login Button */}
             <Button
               type="submit"
-              disabled={loading}
+              disabled={loading || !isFormValid}
               className="
                 w-full
                 py-4
                 rounded-2xl
                 text-lg
                 shadow-lg
+                disabled:opacity-50
+                disabled:cursor-not-allowed
               "
             >
               {loading ? "Logging in..." : "Login"}

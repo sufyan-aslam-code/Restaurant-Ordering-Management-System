@@ -11,6 +11,7 @@ import {
   getMyProfile,
   logoutUser,
   updateMyProfile,
+  updateMyPassword, // 1. Imported the new API function
 } from "../api/auth";
 import {
   clearAuthSession,
@@ -75,6 +76,12 @@ export const AuthProvider = ({ children }) => {
     return response.data;
   }, []);
 
+  // 2. Created the context function to handle the password update
+  const updatePassword = useCallback(async (payload) => {
+    const response = await updateMyPassword(payload);
+    return response.data;
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -83,6 +90,7 @@ export const AuthProvider = ({ children }) => {
       login,
       logout,
       updateProfile,
+      updatePassword, // 3. Added to the provided value
       refreshProfile: syncProfile,
     }),
     [
@@ -92,6 +100,7 @@ export const AuthProvider = ({ children }) => {
       login,
       logout,
       updateProfile,
+      updatePassword, // 4. Added to dependencies
       syncProfile,
     ]
   );

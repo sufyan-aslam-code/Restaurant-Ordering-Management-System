@@ -1,57 +1,53 @@
 import {
   Pizza,
-  Hamburger,
   GlassWater,
-  IceCreamBowl,
-  Sandwich,
   Beef,
+  UtensilsCrossed,
+  Leaf,
+  Globe,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import Container from "../common/Container";
 import SectionHeading from "../common/SectionHeading";
 
+// Updated to match your exact database cuisines and tags!
 const categories = [
   {
     id: 1,
-    title: "Pizza",
-    query: "pizza",
-    icon: Pizza,
+    title: "Desi Food",
+    query: "pakistani|indian|desi|karahi|kebab|keema|masala",
+    icon: UtensilsCrossed,
   },
-
   {
     id: 2,
-    title: "Burgers",
-    query: "burger",
-    icon: Hamburger,
+    title: "Asian Cuisine",
+    query: "asian|thai|korean|vietnamese|chinese|stir-fry",
+    icon: Globe,
   },
-
   {
     id: 3,
-    title: "Drinks",
-    query: "drink|beverage|juice",
-    icon: GlassWater,
+    title: "Italian & Pizza",
+    query: "italian|pizza|pasta|scampi|margherita",
+    icon: Pizza,
   },
-
   {
     id: 4,
-    title: "Desserts",
-    query: "dessert|sweet|cookie|cake|ice cream",
-    icon: IceCreamBowl,
-  },
-
-  {
-    id: 5,
-    title: "Fast Food",
-    query: "fast food|burger|pizza|sandwich|fries|chicken",
+    title: "Mexican & Grill",
+    query: "mexican|brazilian|enchilada|salsa|corn",
     icon: Beef,
   },
-
+  {
+    id: 5,
+    title: "Healthy & Vegan",
+    query: "vegetarian|vegan|salad|chickpea|healthy",
+    icon: Leaf,
+  },
   {
     id: 6,
-    title: "Sandwiches",
-    query: "sandwich",
-    icon: Sandwich,
+    title: "Drinks",
+    query: "cocktail|drink|beverage|mojito|lassi|caipirinha",
+    icon: GlassWater,
   },
 ];
 
@@ -60,9 +56,7 @@ const Categories = () => {
 
   return (
     <section className="py-20 bg-white dark:bg-slate-950">
-
       <Container>
-
         <SectionHeading
           title="Popular Categories"
           subtitle="Explore your favorite food categories"
@@ -78,9 +72,7 @@ const Categories = () => {
             mt-12
           "
         >
-
           {categories.map((category) => {
-
             const Icon = category.icon;
 
             return (
@@ -89,7 +81,9 @@ const Categories = () => {
                 type="button"
                 onClick={() =>
                   navigate(
-                    `/menu?q=${encodeURIComponent(category.title)}&terms=${encodeURIComponent(category.query)}`
+                    `/menu?q=${encodeURIComponent(
+                      category.title
+                    )}&terms=${encodeURIComponent(category.query)}`
                   )
                 }
                 className="
@@ -108,7 +102,6 @@ const Categories = () => {
                   w-full
                 "
               >
-
                 <div
                   className="
                     w-16
@@ -122,12 +115,7 @@ const Categories = () => {
                     mb-4
                   "
                 >
-
-                  <Icon
-                    size={30}
-                    className="text-orange-500"
-                  />
-
+                  <Icon size={30} className="text-orange-500" />
                 </div>
 
                 <h3
@@ -139,15 +127,11 @@ const Categories = () => {
                 >
                   {category.title}
                 </h3>
-
               </button>
             );
           })}
-
         </div>
-
       </Container>
-
     </section>
   );
 };

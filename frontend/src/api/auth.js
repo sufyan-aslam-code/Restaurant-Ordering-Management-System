@@ -25,7 +25,14 @@ export const getMyProfile = () =>
   apiClient.get("/auth/me");
 
 export const updateMyProfile = (payload) =>
-  apiClient.patch("/auth/profile", payload);
+  apiClient.put("/auth/profile", payload, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 
 export const logoutUser = () =>
   apiClient.post("/auth/logout");
+
+export const updateMyPassword = (payload) =>
+  apiClient.put("/auth/update-password", payload);

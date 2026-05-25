@@ -63,3 +63,12 @@ html, body, #root {
 .theme-surface-soft {
 	background-color: var(--muted-bg) !important;
 }
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
