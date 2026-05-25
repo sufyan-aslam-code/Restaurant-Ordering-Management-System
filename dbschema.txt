@@ -1,0 +1,268 @@
+-- =====================================================
+-- RESTAURANT ORDERING & MANAGEMENT SYSTEM DATABASE
+-- FINAL PROFESSIONAL SCHEMA
+-- =====================================================
+
+
+-- =====================================================
+-- DROP OLD DATABASE
+-- =====================================================
+
+DROP DATABASE IF EXISTS restaurant_system;
+
+
+-- =====================================================
+-- CREATE DATABASE
+-- =====================================================
+
+CREATE DATABASE restaurant_system;
+
+
+-- =====================================================
+-- USE DATABASE
+-- =====================================================
+
+USE restaurant_system;
+
+
+-- =====================================================
+-- USERS TABLE
+-- =====================================================
+
+CREATE TABLE users (
+
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    fullName VARCHAR(255) NOT NULL,
+
+    email VARCHAR(255) NOT NULL UNIQUE,
+
+    passwordHash VARCHAR(255) NOT NULL,
+
+    role ENUM('user', 'admin') DEFAULT 'user',
+
+    phoneNumber VARCHAR(20),
+
+    address TEXT,
+
+    emailVerified TINYINT(1) DEFAULT 0,
+
+    emailVerificationTokenHash VARCHAR(255),
+
+    emailVerificationTokenExpiresAt DATETIME,
+
+    passwordResetTokenHash VARCHAR(255),
+
+    passwordResetTokenExpiresAt DATETIME,
+
+    profileImageUrl VARCHAR(500),
+
+    refreshTokenHash VARCHAR(255),
+
+    refreshTokenExpiresAt DATETIME,
+
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP
+
+);
+
+
+-- =====================================================
+-- CATEGORIES TABLE
+-- =====================================================
+
+CREATE TABLE categories (
+
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    name VARCHAR(100) NOT NULL UNIQUE,
+
+    slug VARCHAR(150) NOT NULL UNIQUE,
+
+    image TEXT,
+
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+);
+
+
+-- =====================================================
+-- PRODUCTS TABLE
+-- =====================================================
+
+CREATE TABLE products (
+
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    categoryId INT,
+
+    name VARCHAR(255) NOT NULL,
+
+    slug VARCHAR(255) NOT NULL UNIQUE,
+
+    description TEXT,
+
+    image TEXT,
+
+    cuisine VARCHAR(100),
+
+    calories INT,
+
+    ingredients JSON,
+
+    tags JSON,
+
+    mealType JSON,
+
+    price DECIMAL(10,2) NOT NULL,
+
+    discountPrice DECIMAL(10,2),
+
+    stockQuantity INT DEFAULT 0,
+
+    rating FLOAT DEFAULT 0,
+
+    reviewCount INT DEFAULT 0,
+
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_products_category
+    FOREIGN KEY (categoryId)
+    REFERENCES categories(id)
+    ON DELETE SET NULL
+
+);
+
+
+-- =====================================================
+-- ORDERS TABLE
+-- =====================================================
+
+CREATE TABLE orders (
+
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    orderNumber VARCHAR(50) UNIQUE,
+
+    userId INT NOT NULL,
+
+    totalAmount DECIMAL(10,2) NOT NULL,
+
+    status ENUM(
+        'pending',
+        'confirmed',
+        'preparing',
+        'delivered',
+        'cancelled'
+    ) DEFAULT 'pending',
+
+    paymentMethod VARCHAR(50)
+    DEFAULT 'Cash on Delivery',
+
+    paymentStatus ENUM(
+        'pending',
+        'paid',
+        'failed'
+    ) DEFAULT 'pending',
+
+    deliveryAddress TEXT NOT NULL,
+
+    phoneNumber VARCHAR(20) NOT NULL,
+
+    estimatedDeliveryMinutes INT DEFAULT 30,
+
+    notes TEXT,
+
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_orders_user
+    FOREIGN KEY (userId)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+
+);
+
+
+-- =====================================================
+-- ORDER ITEMS TABLE
+-- =====================================================
+
+CREATE TABLE order_items (
+
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    orderId INT NOT NULL,
+
+    productId INT NOT NULL,
+
+    quantity INT NOT NULL DEFAULT 1,
+
+    price DECIMAL(10,2) NOT NULL,
+
+    subtotal DECIMAL(10,2) NOT NULL,
+
+    CONSTRAINT fk_order_items_order
+    FOREIGN KEY (orderId)
+    REFERENCES orders(id)
+    ON DELETE CASCADE,
+
+    CONSTRAINT fk_order_items_product
+    FOREIGN KEY (productId)
+    REFERENCES products(id)
+    ON DELETE CASCADE
+
+);
+
+
+-- =====================================================
+-- PERFORMANCE INDEXES
+-- =====================================================
+
+CREATE INDEX idx_products_category
+ON products(categoryId);
+
+CREATE INDEX idx_orders_user
+ON orders(userId);
+
+CREATE INDEX idx_order_items_order
+ON order_items(orderId);
+
+CREATE INDEX idx_order_items_product
+ON order_items(productId);
+
+CREATE INDEX idx_refresh_token_hash
+ON users(refreshTokenHash);
+
+CREATE INDEX idx_email_verification_hash
+ON users(emailVerificationTokenHash);
+
+CREATE INDEX idx_password_reset_hash
+ON users(passwordResetTokenHash);
+
+
+-- =====================================================
+-- DEFAULT CATEGORIES
+-- =====================================================
+
+INSERT INTO categories (name, slug) VALUES
+('Pizza', 'pizza'),
+('Burger', 'burger'),
+('Pasta', 'pasta'),
+('Drinks', 'drinks'),
+('Desserts', 'desserts'),
+('Fast Food', 'fast-food');
+
+
+-- =====================================================
+-- VERIFY TABLES
+-- =====================================================
+
+SHOW TABLES;

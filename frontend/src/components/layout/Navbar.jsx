@@ -5,10 +5,8 @@ import {
   useRef,
   useState,
 } from "react";
-import { useCart } from "../../context/CartContext";
-
 import { NavLink, useNavigate } from "react-router-dom";
-
+import { toast } from "react-toastify";
 import {
   Moon,
   Sun,
@@ -16,60 +14,51 @@ import {
   UserCircle,
   LogOut,
   Settings,
+  Menu,
+  X,
+  Store
 } from "lucide-react";
 
 import { ThemeContext } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
+import { useCart } from "../../context/CartContext";
 
 import Button from "../common/Button";
 import Container from "../common/Container";
 
-const navLinks = [
-  {
-    id: 1,
-    label: "Home",
-    path: "/",
-  },
+const publicLinks = [
+  { id: 1, label: "Home", path: "/" },
+  { id: 2, label: "Menu", path: "/menu" },
+  { id: 3, label: "About", path: "/about" },
+  { id: 4, label: "Contact", path: "/contact" },
+];
 
-  {
-    id: 2,
-    label: "Menu",
-    path: "/menu",
-  },
-
-  {
-    id: 3,
-    label: "About",
-    path: "/about",
-  },
-
-  {
-    id: 4,
-    label: "Contact",
-    path: "/contact",
-  },
+const adminLinks = [
+  { id: 5, label: "Dashboard", path: "/admin/dashboard" },
+  { id: 6, label: "Manage Foods", path: "/admin/manage-foods" },
+  { id: 7, label: "Orders", path: "/admin/orders" },
+  { id: 8, label: "View Store", path: "/menu", icon: Store },
 ];
 
 const Navbar = () => {
   const navigate = useNavigate();
-
-  const { darkMode, toggleTheme } =
-    useContext(ThemeContext);
-
+  const { darkMode, toggleTheme } = useContext(ThemeContext);
   const { totalQuantity } = useCart();
-
-  const {
-    user,
-    isAuthenticated,
-    logout,
-  } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
+
+  const navigationLinks = user?.role === "admin" ? adminLinks : publicLinks;
+  
+  // =========================================
+  // DYNAMIC DEFAULT PATH BASED ON ROLE
+  // =========================================
+  const defaultPath = user?.role === "admin" ? "/admin/dashboard" : "/";
 
   const userInitials = useMemo(() => {
     const name = user?.fullName || "";
-
     return name
       .split(" ")
       .filter(Boolean)
@@ -87,9 +76,7 @@ const Navbar = () => {
         setMenuOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleOutsideClick);
-
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
@@ -98,210 +85,207 @@ const Navbar = () => {
   const handleLogout = async () => {
     await logout();
     setMenuOpen(false);
+    setMobileMenuOpen(false);
     navigate("/");
   };
 
+  const handleCartClick = (e) => {
+    if (!isAuthenticated) {
+      e.preventDefault();
+      toast.error("Please login to view your cart!");
+      navigate("/login");
+    }
+  };
+
   return (
-    <nav
-      className="
-        sticky
-        top-0
-        z-50
-        w-full
-        bg-white/90 theme-surface
-        backdrop-blur-md
-        border-b
-        border-gray-200 dark:border-gray-700
-        shadow-sm
-        transition
-      "
-    >
+    <nav className="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-gray-100 dark:border-slate-800 shadow-sm transition-colors duration-300">
       <Container>
-
-        <div className="flex items-center justify-between py-4">
-
-          {/* Logo */}
-          <NavLink to="/">
-
-            <h1 className="text-3xl font-bold text-orange-500 cursor-pointer">
+        <div className="flex items-center justify-between py-3 sm:py-4">
+          
+          {/* Logo - Now uses dynamic defaultPath */}
+          <NavLink to={defaultPath} onClick={() => setMobileMenuOpen(false)}>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-400 cursor-pointer tracking-tight">
               FoodieHub
             </h1>
-
           </NavLink>
 
-          {/* Navigation Links */}
+          {/* Desktop Navigation */}
           <ul className="hidden md:flex items-center gap-8">
-
-            {navLinks.map((link) => (
+            {navigationLinks.map((link) => (
               <li key={link.id}>
-
                 <NavLink
                   to={link.path}
                   className={({ isActive }) =>
-                    `
-                      font-medium
-                      transition
-                      ${
-                        isActive
-                          ? "text-orange-500"
-                                  : "text-gray-700 dark:text-gray-200 hover:text-orange-500"
-                      }
-                    `
+                    `flex items-center gap-1.5 font-semibold transition-all duration-200 ${
+                      isActive
+                        ? "text-orange-500"
+                        : "text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400"
+                    }`
                   }
                 >
+                  {link.icon && <link.icon size={16} className="mb-0.5" />}
                   {link.label}
                 </NavLink>
-
               </li>
             ))}
-
           </ul>
 
-          {/* Right Side */}
-          <div className="flex items-center gap-4">
-
+          {/* Right Side Actions */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="
-                p-2
-                rounded-full
-                border
-                border-gray-300 dark:border-gray-700
-                text-gray-700 dark:text-gray-200
-                hover:border-orange-500
-                hover:text-orange-500
-                transition
-              "
+              className="p-2.5 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Toggle Dark Mode"
             >
-              {darkMode ? (
-                <Sun size={20} />
-              ) : (
-                <Moon size={20} />
-              )}
+              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
-            {/* Cart */}
-            <NavLink
-              to="/cart"
-              className="
-                relative
-                p-2
-                rounded-full
-                border
-                border-gray-300 dark:border-gray-700
-                text-gray-700 dark:text-gray-200
-                hover:border-orange-500
-                hover:text-orange-500
-                transition
-              "
-            >
-
-              <ShoppingCart size={20} />
-
-              {/* Cart Count */}
-              {
-                totalQuantity > 0 && (
-                  <span
-                    className="
-                      absolute
-                      -top-2
-                      -right-2
-                      bg-orange-500
-                      text-white
-                      text-xs
-                      w-5
-                      h-5
-                      flex
-                      items-center
-                      justify-center
-                      rounded-full
-                    "
-                  >
+            {/* Cart Button */}
+            {user?.role !== "admin" && (
+              <NavLink
+                to="/cart"
+                onClick={handleCartClick}
+                className="relative p-2.5 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-slate-800 transition-colors"
+              >
+                <ShoppingCart size={20} />
+                {isAuthenticated && totalQuantity > 0 && (
+                  <span className="absolute 0 top-1 right-1 bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white dark:border-slate-950 transform translate-x-1/4 -translate-y-1/4">
                     {totalQuantity}
                   </span>
-                )
-              }
+                )}
+              </NavLink>
+            )}
 
-            </NavLink>
-
+            {/* User Profile / Login */}
             {isAuthenticated ? (
               <div className="relative" ref={profileMenuRef}>
                 <button
                   type="button"
-                  onClick={() => setMenuOpen((currentValue) => !currentValue)}
-                  className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white theme-surface dark:border-gray-700 px-3 py-2 transition hover:border-orange-300"
+                  onClick={() => setMenuOpen((prev) => !prev)}
+                  className="flex items-center gap-2.5 rounded-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 pr-3 pl-1 py-1 transition-all hover:border-orange-300 dark:hover:border-orange-500/50 hover:shadow-sm"
                 >
                   {user?.profileImageUrl ? (
                     <img
                       src={`http://localhost:5000${user.profileImageUrl}`}
                       alt={user?.fullName}
-                      className="h-10 w-10 rounded-full object-cover"
+                      className="h-8 w-8 rounded-full object-cover"
                       onError={(e) => {
                         e.target.style.display = "none";
                       }}
                     />
                   ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 font-semibold text-orange-600">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-orange-100 to-orange-50 dark:from-orange-500/20 dark:to-orange-500/10 font-bold text-orange-600 dark:text-orange-500 text-sm">
                       {userInitials || "U"}
                     </div>
                   )}
 
-                  <span className="hidden text-sm font-semibold text-gray-800 md:inline">
-                    {user?.fullName || "Profile"}
+                  <span className="hidden md:inline text-sm font-bold text-gray-700 dark:text-gray-200">
+                    {user?.fullName?.split(" ")[0] || "Profile"}
                   </span>
                 </button>
 
-                  {menuOpen ? (
-                  <div className="absolute right-0 z-20 mt-3 w-64 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white theme-surface p-3 shadow-xl">
+                {/* Profile Dropdown */}
+                {menuOpen && (
+                  <div className="absolute right-0 z-50 mt-3 w-56 rounded-2xl border border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 shadow-2xl dark:shadow-none animate-in slide-in-from-top-2 fade-in duration-200">
                     <button
                       type="button"
                       onClick={() => {
                         setMenuOpen(false);
                         navigate("/profile");
                       }}
-                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-gray-700 transition hover:bg-orange-50 hover:text-orange-600"
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-gray-700 dark:text-gray-200 transition-colors hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-slate-700/50"
                     >
-                      <Settings size={16} />
+                      <Settings size={18} />
                       Profile Settings
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        navigate("/profile#orders");
-                      }}
-                      className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-gray-700 transition hover:bg-orange-50 hover:text-orange-600"
-                    >
-                      <UserCircle size={16} />
-                      My Orders
-                    </button>
+                    {user?.role !== "admin" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          navigate("/my-orders");
+                        }}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-gray-700 dark:text-gray-200 transition-colors hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-slate-700/50"
+                      >
+                        <UserCircle size={18} />
+                        My Orders
+                      </button>
+                    )}
+
+                    <div className="my-1 h-px bg-gray-100 dark:bg-slate-700"></div>
 
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-red-600 transition hover:bg-red-50"
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-red-600 dark:text-red-400 transition-colors hover:bg-red-50 dark:hover:bg-red-500/10"
                     >
-                      <LogOut size={16} />
+                      <LogOut size={18} />
                       Logout
                     </button>
                   </div>
-                ) : null}
+                )}
               </div>
             ) : (
-              <NavLink to="/login">
-                <Button className="px-5 py-2 rounded-xl">
+              <NavLink to="/login" className="hidden sm:block">
+                <Button className="px-6 py-2 rounded-xl font-semibold shadow-md shadow-orange-500/20">
                   Login
                 </Button>
               </NavLink>
             )}
 
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2.5 rounded-xl border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 hover:border-orange-500 hover:text-orange-500 transition-colors ml-1"
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+
           </div>
-
         </div>
-
       </Container>
+
+      {/* Mobile Navigation Dropdown */}
+      <div 
+        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out border-t border-gray-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl ${
+          mobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0 border-none"
+        }`}
+      >
+        <ul className="flex flex-col px-6 py-4 space-y-2">
+          {navigationLinks.map((link) => (
+            <li key={link.id}>
+              <NavLink
+                to={link.path}
+                onClick={() => setMobileMenuOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 px-4 py-3 rounded-xl font-semibold transition-colors ${
+                    isActive
+                      ? "bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-500"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800"
+                  }`
+                }
+              >
+                {link.icon && <link.icon size={18} />}
+                {link.label}
+              </NavLink>
+            </li>
+          ))}
+          
+          {/* Mobile Login Button (if logged out) */}
+          {!isAuthenticated && (
+            <li className="pt-2">
+              <NavLink to="/login" onClick={() => setMobileMenuOpen(false)}>
+                <Button className="w-full py-3 rounded-xl font-semibold">
+                  Login to Account
+                </Button>
+              </NavLink>
+            </li>
+          )}
+        </ul>
+      </div>
     </nav>
   );
 };

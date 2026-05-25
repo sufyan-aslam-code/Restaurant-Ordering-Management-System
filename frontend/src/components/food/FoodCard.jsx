@@ -1,17 +1,57 @@
-﻿import { Clock3, Eye, Star } from "lucide-react";
-
+﻿import { ShoppingCart, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import Button from "../common/Button";
-
 import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
 
 const FoodCard = ({ food }) => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { isAuthenticated, user } = useAuth();
 
+  // =========================================
+  // IMAGE URL FIX
+  // =========================================
+  // If the image already has "http", use it. Otherwise, attach your backend URL.
+  const BACKEND_URL = "http://localhost:5000";
+  const imageUrl = food.image?.startsWith("http") 
+    ? food.image 
+    : `${BACKEND_URL}${food.image}`;
+
+  // =========================================
+  // STOCK LOGIC
+  // =========================================
+  const isInStock = Number(food.stockQuantity) > 0;
+
+  // =========================================
+  // OPEN PRODUCT DETAILS
+  // =========================================
   const openProductDetails = () => {
     navigate(`/product/${food.id}`);
+  };
+
+  // =========================================
+  // ADD TO CART HANDLER
+  // =========================================
+  const handleAddToCart = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!isAuthenticated) {
+      toast.error("Please login to add items to your cart!");
+      navigate("/login");
+      return;
+    }
+
+    if (!isInStock) {
+      toast.error("Product is currently unavailable!");
+      return;
+    }
+
+    addToCart(food, 1);
+    toast.success(`${food.name} added to cart`);
   };
 
   return (
@@ -25,198 +65,94 @@ const FoodCard = ({ food }) => {
           openProductDetails();
         }
       }}
-      className="
-        group
-        h-full
-        flex
-        flex-col
-        bg-white
-        rounded-3xl
-        overflow-hidden
-        border
-        border-gray-100
-        shadow-sm
-        hover:shadow-2xl
-        hover:-translate-y-1
-        transition-all
-        duration-300
-        cursor-pointer
-      "
+      className="group h-full flex flex-col bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 cursor-pointer"
     >
-      {/* Image */}
+      {/* IMAGE */}
       <div className="relative overflow-hidden">
+        {/* USING THE FIXED IMAGE URL HERE */}
         <img
-          src={food.image}
+          src={imageUrl}
           alt={food.name}
-          className="
-            w-full
-            h-60
-            object-cover
-            group-hover:scale-105
-            transition-transform
-            duration-500
-          "
+          className={`w-full h-72 object-cover group-hover:scale-105 transition-transform duration-500 ${
+            !isInStock ? "grayscale opacity-80" : ""
+          }`}
         />
 
-        {/* Overlay Gradient */}
-        <div
-          className="
-            absolute
-            inset-0
-            bg-gradient-to-tfrom-black/40
-            to-transparent
-          "
-        />
+        {/* OVERLAY */}
+        <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent" />
 
-        {/* Rating */}
-        <div
-          className="
-            absolute
-            top-4
-            left-4
-            bg-white
-            px-3
-            py-1.5
-            rounded-full
-            flex
-            items-center
-            gap-1
-            shadow-md
-          "
-        >
-          <Star
-            size={16}
-            className="fill-yellow-400 text-yellow-400"
-          />
-
-          <span className="text-sm font-semibold">4.8</span>
-        </div>
-
-        {/* Delivery Time */}
-        <div
-          className="
-            absolute
-            bottom-4
-            left-4
-            bg-white/90
-            backdrop-blur-md
-            px-3
-            py-1.5
-            rounded-full
-            flex
-            items-center
-            gap-2
-            shadow-md
-          "
-        >
-          <Clock3
-            size={16}
-            className="text-orange-500"
-          />
-
-          <span className="text-sm font-medium text-gray-700">20-30 min</span>
+        {/* RATING */}
+        <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
+          <Star size={15} className="fill-yellow-400 text-yellow-400" />
+          <span className="text-sm font-bold text-gray-800">
+            {Number(food.rating || 4.5).toFixed(1)}
+          </span>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-5 flex flex-col flex-1">
-        {/* Category */}
-        <p
-          className="
-            text-sm
-            font-medium
-            text-orange-500
-            uppercase
-            tracking-wide
-            mb-2
-          "
-        >
-          {food.category}
-        </p>
-
-        {/* Name */}
-        <div className="flex items-start justify-between gap-4 mb-3">
-          <h2
-            className="
-              text-xl
-              font-bold
-              text-gray-900
-              leading-snug
-              min-h-[64px]
-            "
-          >
-            {food.name}
-          </h2>
-
-          <span
-            className="
-              text-xl
-              font-bold
-              text-gray-900
-              whitespace-nowrap
-            "
-          >
-            Rs. {food.price}
+      {/* CONTENT */}
+      <div className="flex flex-col flex-1 p-6">
+        {/* CATEGORY */}
+        <div className="mb-4">
+          <span className="inline-flex items-center px-3 py-1 rounded-full bg-orange-100 text-orange-600 text-xs font-bold uppercase tracking-wide">
+            {food.categoryName || "Food"}
           </span>
         </div>
 
-        {/* Description */}
-        <p
-          className="
-            text-gray-500
-            text-sm
-            leading-relaxed
-            mb-5
-            min-h-[76px]
-          "
-        >
-          {food.description || "Freshly prepared with premium ingredients and rich flavors for the perfect meal experience."}
+        {/* TITLE + PRICE */}
+        <div className="flex items-start gap-3 mb-4">
+          <h2 className="flex-1 text-2xl font-bold text-gray-900 leading-tight line-clamp-2 wrap-break-words">
+            {food.name}
+          </h2>
+
+          <div className="flex flex-col items-end shrink-0">
+            <span className="text-2xl font-extrabold text-orange-500 whitespace-nowrap">
+              Rs. {Number(food.discountPrice || food.price || 0).toFixed(0)}
+            </span>
+
+            {food.discountPrice && (
+              <span className="text-sm text-gray-400 line-through font-medium">
+                Rs. {Number(food.price).toFixed(0)}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* DESCRIPTION */}
+        <p className="text-gray-500 text-[15px] leading-7 line-clamp-2 mb-6">
+          {food.description || "Freshly prepared with premium ingredients."}
         </p>
 
-        {/* Bottom */}
-        <div className="flex items-center justify-between mt-auto">
-          <div className="flex items-center gap-2">
+        {/* FOOTER */}
+        <div className="mt-auto flex items-center justify-between gap-3">
+          
+          {/* STOCK INDICATOR */}
+          <div className="flex items-center gap-2 min-w-0">
             <div
-              className="
-                w-2
-                h-2
-                rounded-full
-                bg-green-500
-              "
+              className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                isInStock ? "bg-green-500" : "bg-red-500"
+              }`}
             />
-
-            <span className="text-sm text-gray-500">Available</span>
+            <span
+              className={`text-sm font-semibold whitespace-nowrap ${
+                isInStock ? "text-green-600" : "text-red-500"
+              }`}
+            >
+              {isInStock ? "In Stock" : "Unavailable"}
+            </span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                openProductDetails();
-              }}
-              className="h-12 px-4 rounded-2xl border border-orange-200 text-orange-600 hover:bg-orange-50 transition inline-flex items-center gap-2"
-            >
-              <Eye size={18} />
-              <span className="text-sm font-semibold">View</span>
-            </button>
-
+          {/* ADD TO CART BUTTON (Hidden for Admins AND Hidden if Out of Stock) */}
+          {user?.role !== "admin" && isInStock && (
             <Button
-              onClick={(event) => {
-                event.stopPropagation();
-                addToCart(food);
-              }}
-              className="
-                w-12
-                h-12
-                rounded-2xl
-                shadow-lg
-              "
-              aria-label="Add to cart"
+              onClick={handleAddToCart}
+              className="ml-auto h-11 min-w-[135px] px-5 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold whitespace-nowrap transition-all bg-orange-500 hover:bg-orange-600 text-white shadow-md"
             >
-              <span className="text-2xl font-bold leading-none text-white">+</span>
+              <ShoppingCart size={20} />
+              Add to Cart
             </Button>
-          </div>
+          )}
+
         </div>
       </div>
     </div>

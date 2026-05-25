@@ -4,54 +4,68 @@ import Container from "../common/Container";
 import SectionHeading from "../common/SectionHeading";
 import FoodCard from "../food/FoodCard";
 
+import useApi from "../../hooks/useApi";
+
+import {
+  getAllProducts,
+} from "../../api/products";
+
 const FeaturedFoods = () => {
 
   const [foods, setFoods] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  const {
+    data,
+    loading,
+    error,
+  } = useApi(() =>
+    getAllProducts({
+      limit: 8,
+    })
+  );
 
   useEffect(() => {
 
-    const fetchFoods = async () => {
+    if (!data?.products) return;
 
-      try {
+    const formattedFoods =
+      data.products.map((item) => ({
 
-        const response = await fetch(
-          "https://dummyjson.com/recipes?limit=8"
-        );
+        id: item.id,
 
-        const data = await response.json();
+        name: item.name,
 
-        const formattedFoods =
-          data.recipes.map((item) => ({
-            id: item.id,
-            name: item.name,
-            image: item.image,
-            category: item.cuisine,
-            description:
-              item.instructions?.slice(0, 2).join(" "),
-            price:
-              Math.floor(Math.random() * 2000) + 500,
-          }));
+        image: item.image,
 
-        setFoods(formattedFoods);
+        categoryName:
+          item.categoryName || "Food",
 
-      } catch (error) {
+        description:
+          item.description || "",
 
-        console.log(error);
+        price:
+          Number(item.price),
 
-      } finally {
+        discountPrice:
+          Number(item.discountPrice),
 
-        setLoading(false);
+        rating:
+          item.rating,
 
-      }
+        slug:
+          item.slug,
 
-    };
+        stockQuantity:
+          item.stockQuantity,
 
-    fetchFoods();
+      }));
 
-  }, []);
+    setFoods(formattedFoods);
+
+  }, [data]);
 
   return (
+
     <section className="py-20 bg-gray-50 dark:bg-slate-900">
 
       <Container>
@@ -61,11 +75,17 @@ const FeaturedFoods = () => {
           subtitle="Most popular dishes loved by customers"
         />
 
-        {/* Loading */}
+        {/* LOADING */}
         {loading ? (
 
           <div className="text-center text-gray-500 dark:text-gray-400 mt-10">
             Loading foods...
+          </div>
+
+        ) : error ? (
+
+          <div className="text-center text-red-500 mt-10">
+            Failed to load foods
           </div>
 
         ) : (
@@ -74,8 +94,8 @@ const FeaturedFoods = () => {
             className="
               grid
               grid-cols-1
-              sm:grid-cols-2
-              lg:grid-cols-4
+              md:grid-cols-2
+              xl:grid-cols-3
               gap-8
               mt-12
             "
@@ -97,7 +117,9 @@ const FeaturedFoods = () => {
       </Container>
 
     </section>
+
   );
+
 };
 
 export default FeaturedFoods;
