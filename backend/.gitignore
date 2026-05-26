@@ -1,2 +1,34 @@
-node_modules
+# Dependencies
+node_modules/
+
+# Environment variables
 .env
+
+# Uploads
+uploads/
+
+# Logs
+logs/
+*.log
+
+# Build
+dist/
+build/
+
+# Coverage
+coverage/
+
+# Cache
+.cache/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+
+# Temp
+tmp/
+temp/
