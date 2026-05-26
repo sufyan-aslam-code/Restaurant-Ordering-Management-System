@@ -1,79 +1,51 @@
 import multer from "multer";
-import path from "path";
-import fs from "fs";
-import { fileURLToPath } from "url";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // =========================================
-// ES MODULE SETUP
+// CLOUDINARY CONFIGURATION
 // =========================================
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// =========================================
-// DIRECTORIES
-// =========================================
-// __dirname is src/middlewares. Go up to src (..), up to backend (..), into uploads!
-const productsDir = path.join(__dirname, "..", "..", "uploads", "products");
-const usersDir = path.join(__dirname, "..", "..", "uploads", "users");
-
-// =========================================
-// CREATE DIRECTORIES IF THEY DON'T EXIST
-// =========================================
-if (!fs.existsSync(productsDir)) {
-  fs.mkdirSync(productsDir, { recursive: true });
-}
-if (!fs.existsSync(usersDir)) {
-  fs.mkdirSync(usersDir, { recursive: true });
-}
-
-// =========================================
-// FILE FILTER
-// =========================================
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error("Only JPG, PNG, WEBP images are allowed"));
-  }
-};
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // =========================================
 // STORAGE ENGINES
 // =========================================
-const storageProducts = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, productsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+const storageProducts = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "foodiehub/products", // Cloudinary will automatically create this folder
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
   },
 });
 
-const storageUsers = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, usersDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+const storageUsers = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "foodiehub/users", // Cloudinary will automatically create this folder
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
   },
 });
 
 // =========================================
 // EXPORTS
 // =========================================
+
+// Default export for products (matches your existing setup)
 const upload = multer({
   storage: storageProducts,
-  fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });
 export default upload;
 
+// Named export for users (matches your existing setup)
 export const uploadUser = multer({
   storage: storageUsers,
-  fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });

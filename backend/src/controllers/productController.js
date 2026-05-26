@@ -1,60 +1,41 @@
 import pool from "../config/db.js";
 
-
 // SAFE JSON PARSER
 const safeJSONParse = (value) => {
-
   try {
-
     // Already parsed array/object
     if (Array.isArray(value) || typeof value === "object") {
       return value;
     }
-
     // Empty/null fallback
     if (!value) {
       return [];
     }
-
     return JSON.parse(value);
-
   } catch (error) {
-
     return [];
   }
-
 };
-
 
 // =========================================
 // GET ALL PRODUCTS
 // =========================================
 
 export const getProducts = async (req, res) => {
-
   try {
-
     // =========================================
     // QUERY PARAMS
     // =========================================
-
     const page = Number(req.query.page) || 1;
-
     const limit = Number(req.query.limit) || 10;
-
     const offset = (page - 1) * limit;
-
     const search = req.query.search || "";
-
     const category = req.query.category || "";
-
     const sort = req.query.sort || "latest";
-
 
     // =========================================
     // BASE QUERY
     // =========================================
-
     let query = `
       SELECT
         products.*,
@@ -75,169 +56,111 @@ export const getProducts = async (req, res) => {
 
     const values = [];
 
-
     // =========================================
     // SEARCH
     // =========================================
-
     if (search) {
-
       query += `
         AND (
           products.name LIKE ?
           OR products.cuisine LIKE ?
         )
       `;
-
       countQuery += `
         AND (
           products.name LIKE ?
           OR products.cuisine LIKE ?
         )
       `;
-
       values.push(`%${search}%`, `%${search}%`);
     }
-
 
     // =========================================
     // CATEGORY FILTER
     // =========================================
-
     if (category) {
-
       query += ` AND categories.name = ? `;
-
       countQuery += ` AND categories.name = ? `;
-
       values.push(category);
     }
-
 
     // =========================================
     // SORTING
     // =========================================
-
     if (sort === "price_asc") {
-
       query += ` ORDER BY products.price ASC `;
-
-    }
-
-    else if (sort === "price_desc") {
-
+    } else if (sort === "price_desc") {
       query += ` ORDER BY products.price DESC `;
-
-    }
-
-    else if (sort === "rating") {
-
+    } else if (sort === "rating") {
       query += ` ORDER BY products.rating DESC `;
-
-    }
-
-    else {
-
+    } else {
       query += ` ORDER BY products.createdAt DESC `;
     }
-
 
     // =========================================
     // PAGINATION
     // =========================================
-
     query += ` LIMIT ? OFFSET ? `;
-
     const finalValues = [...values, limit, offset];
-
 
     // =========================================
     // GET PRODUCTS
     // =========================================
-
     const [products] = await pool.query(
       query,
       finalValues
     );
 
-
     // =========================================
     // GET TOTAL COUNT
     // =========================================
-
     const [totalResult] = await pool.query(
       countQuery,
       values
     );
 
     const totalProducts = totalResult[0].total;
-
     const totalPages = Math.ceil(totalProducts / limit);
-
 
     // =========================================
     // FORMAT PRODUCTS
     // =========================================
-
     const formattedProducts = products.map(product => ({
-
       ...product,
-
       ingredients: safeJSONParse(product.ingredients),
-
       instructions: safeJSONParse(product.instructions),
-
       tags: safeJSONParse(product.tags),
-
       mealType: safeJSONParse(product.mealType)
-
     }));
-
 
     // =========================================
     // RESPONSE
     // =========================================
-
     res.status(200).json({
-
       success: true,
-
       currentPage: page,
-
       totalPages,
-
       totalProducts,
-
       count: formattedProducts.length,
-
       products: formattedProducts
-
     });
 
   } catch (error) {
-
     console.error(error);
-
     res.status(500).json({
       success: false,
       message: "Failed to fetch products"
     });
-
   }
-
 };
-
 
 // =========================================
 // GET SINGLE PRODUCT
 // =========================================
 
 export const getSingleProduct = async (req, res) => {
-
   try {
-
     const { id } = req.params;
-
 
     const [products] = await pool.query(
       `
@@ -252,31 +175,20 @@ export const getSingleProduct = async (req, res) => {
       [id]
     );
 
-
     if (products.length === 0) {
-
       return res.status(404).json({
         success: false,
         message: "Product not found"
       });
-
     }
 
-
     const product = {
-
       ...products[0],
-
       ingredients: safeJSONParse(products[0].ingredients),
-
       instructions: safeJSONParse(products[0].instructions),
-
       tags: safeJSONParse(products[0].tags),
-
       mealType: safeJSONParse(products[0].mealType)
-
     };
-
 
     res.status(200).json({
       success: true,
@@ -284,16 +196,12 @@ export const getSingleProduct = async (req, res) => {
     });
 
   } catch (error) {
-
     console.error(error);
-
     res.status(500).json({
       success: false,
       message: "Failed to fetch product"
     });
-
   }
-
 };
 
 // =========================================
@@ -301,9 +209,7 @@ export const getSingleProduct = async (req, res) => {
 // =========================================
 
 export const createProduct = async (req, res) => {
-
   try {
-
     const {
       categoryId,
       name,
@@ -320,12 +226,12 @@ export const createProduct = async (req, res) => {
       rating,
     } = req.body;
 
-
-    // IMAGE PATH
+    // =========================================
+    // NEW CLOUDINARY IMAGE PATH LOGIC
+    // =========================================
     const image = req.file
-      ? `/uploads/products/${req.file.filename}`
+      ? req.file.path // <-- Grabs the full Cloudinary URL
       : "";
-
 
     // ARRAY FORMAT
     const ingredientsArray =
@@ -348,7 +254,6 @@ export const createProduct = async (req, res) => {
             .split(",")
             .map((item) => item.trim())
         : [];
-
 
     const [result] = await pool.query(
       `
@@ -395,16 +300,12 @@ export const createProduct = async (req, res) => {
     });
 
   } catch (error) {
-
     console.error(error);
-
     res.status(500).json({
       success: false,
       message: "Failed to create product",
     });
-
   }
-
 };
 
 // =========================================
@@ -412,11 +313,8 @@ export const createProduct = async (req, res) => {
 // =========================================
 
 export const updateProduct = async (req, res) => {
-
   try {
-
     const { id } = req.params;
-
     const {
       categoryId,
       name,
@@ -433,7 +331,6 @@ export const updateProduct = async (req, res) => {
       rating,
     } = req.body;
 
-
     // GET OLD PRODUCT
     const [existingProducts] =
       await pool.query(
@@ -446,20 +343,19 @@ export const updateProduct = async (req, res) => {
       );
 
     if (existingProducts.length === 0) {
-
       return res.status(404).json({
         success: false,
         message: "Product not found",
       });
-
     }
 
-
+    // =========================================
+    // NEW CLOUDINARY IMAGE PATH LOGIC
+    // =========================================
     // KEEP OLD IMAGE IF NEW NOT UPLOADED
     const image = req.file
-      ? `/uploads/products/${req.file.filename}`
+      ? req.file.path // <-- Grabs the full Cloudinary URL
       : existingProducts[0].image;
-
 
     // ARRAY FORMAT
     const ingredientsArray =
@@ -482,7 +378,6 @@ export const updateProduct = async (req, res) => {
             .split(",")
             .map((item) => item.trim())
         : [];
-
 
     await pool.query(
       `
@@ -529,16 +424,12 @@ export const updateProduct = async (req, res) => {
     });
 
   } catch (error) {
-
     console.error(error);
-
     res.status(500).json({
       success: false,
       message: "Failed to update product",
     });
-
   }
-
 };
 
 // =========================================
@@ -546,9 +437,7 @@ export const updateProduct = async (req, res) => {
 // =========================================
 
 export const deleteProduct = async (req, res) => {
-
   try {
-
     const { id } = req.params;
 
     await pool.query(
@@ -565,16 +454,12 @@ export const deleteProduct = async (req, res) => {
     });
 
   } catch (error) {
-
     console.error(error);
-
     res.status(500).json({
       success: false,
       message: "Failed to delete product",
     });
-
   }
-
 };
 
 // =========================================
@@ -582,11 +467,8 @@ export const deleteProduct = async (req, res) => {
 // =========================================
 
 export const updateStock = async (req, res) => {
-
   try {
-
     const { id } = req.params;
-
     const { stockQuantity } = req.body;
 
     await pool.query(
@@ -604,14 +486,10 @@ export const updateStock = async (req, res) => {
     });
 
   } catch (error) {
-
     console.error(error);
-
     res.status(500).json({
       success: false,
       message: "Failed to update stock",
     });
-
   }
-
 };
