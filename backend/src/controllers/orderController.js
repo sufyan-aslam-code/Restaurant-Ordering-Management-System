@@ -28,13 +28,13 @@ const formatOrder = (order, items = []) => ({
 export const createOrder = async (req, res) => {
   try {
     const {
-  items,
-  deliveryAddress,
-  phoneNumber,
-  paymentMethod = "Cash on Delivery",
-  paymentStatus = "pending",
-  notes = "",
-} = req.body;
+      items,
+      deliveryAddress,
+      phoneNumber,
+      paymentMethod = "Cash on Delivery",
+      paymentStatus = "pending",
+      notes = "",
+    } = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({
@@ -61,12 +61,14 @@ export const createOrder = async (req, res) => {
         });
       }
 
+      // Fetch discountPrice along with standard price
       const [products] = await query(
         `
         SELECT
           id,
           name,
           price,
+          discountPrice,
           stockQuantity,
           image
         FROM products
@@ -96,8 +98,12 @@ export const createOrder = async (req, res) => {
         });
       }
 
-      const price = Number(product.price);
-      const subtotal = price * quantity;
+      // Calculate final price checking for discount
+      const regularPrice = Number(product.price);
+      const discountPrice = Number(product.discountPrice);
+      
+      const finalPrice = (discountPrice && discountPrice > 0) ? discountPrice : regularPrice;
+      const subtotal = finalPrice * quantity;
 
       totalAmount += subtotal;
 
@@ -106,7 +112,7 @@ export const createOrder = async (req, res) => {
         name: product.name,
         image: product.image,
         quantity,
-        price,
+        price: finalPrice,
         subtotal,
       });
     }
@@ -130,15 +136,15 @@ export const createOrder = async (req, res) => {
       VALUES (?, ?, ?, 'pending', ?, ?, ?, ?, 35, ?)
       `,
       [
-  orderNumber,
-  req.auth.sub,
-  totalAmount,
-  paymentMethod,
-  paymentStatus,
-  deliveryAddress.trim(),
-  phoneNumber.trim(),
-  notes.trim(),
-]
+        orderNumber,
+        req.auth.sub,
+        totalAmount,
+        paymentMethod,
+        paymentStatus,
+        deliveryAddress.trim(),
+        phoneNumber.trim(),
+        notes.trim(),
+      ]
     );
 
     const orderId = orderResult.insertId;
@@ -214,7 +220,7 @@ export const createOrder = async (req, res) => {
           )
           .join("");
 
-       const html = `
+        const html = `
   <div style="
     background:#f3f4f6;
     padding:40px 20px;
@@ -230,7 +236,6 @@ export const createOrder = async (req, res) => {
       box-shadow:0 4px 12px rgba(0,0,0,0.08);
     ">
 
-      <!-- HEADER -->
       <div style="
         background:#f97316;
         color:white;
@@ -254,7 +259,6 @@ export const createOrder = async (req, res) => {
         </p>
       </div>
 
-      <!-- BODY -->
       <div style="padding:32px;">
 
         <p style="
@@ -273,7 +277,6 @@ export const createOrder = async (req, res) => {
           Your order has been placed successfully. We are preparing your delicious meal and will notify you once your order is confirmed.
         </p>
 
-        <!-- ORDER SUMMARY -->
         <div style="
           background:#f9fafb;
           border:1px solid #e5e7eb;
@@ -307,7 +310,6 @@ export const createOrder = async (req, res) => {
 
         </div>
 
-        <!-- ITEMS -->
         <h3 style="
           margin-bottom:14px;
           color:#111827;
@@ -352,7 +354,6 @@ export const createOrder = async (req, res) => {
           </ul>
         </div>
 
-        <!-- DELIVERY INFO -->
         <div style="
           background:#fff7ed;
           border:1px solid #fdba74;
@@ -365,7 +366,6 @@ export const createOrder = async (req, res) => {
           Estimated Delivery Time: <strong>35 mins</strong>
         </div>
 
-        <!-- BUTTON -->
         <div style="text-align:center;">
 
           <a
@@ -388,7 +388,6 @@ export const createOrder = async (req, res) => {
 
       </div>
 
-      <!-- FOOTER -->
       <div style="
         padding:20px;
         text-align:center;

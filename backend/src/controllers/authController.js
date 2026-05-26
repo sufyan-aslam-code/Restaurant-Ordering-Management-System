@@ -1,8 +1,4 @@
 import bcrypt from "bcryptjs";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-
 import { query } from "../config/db.js";
 import { sendMail } from "../utils/email.js";
 import {
@@ -11,9 +7,6 @@ import {
   hashToken,
   verifyRefreshToken,
 } from "../utils/token.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 
@@ -561,31 +554,12 @@ export const updateProfile = async (req, res) => {
 
     const currentUser = await getUserById(userId);
 
+    // =========================================
+    // NEW CLOUDINARY IMAGE PATH LOGIC
+    // =========================================
     if (req.file) {
-      // 1. Delete the old image if it exists
-      if (currentUser.profileImageUrl) {
-        try {
-          // Fixed path: points directly to src/uploads/users/
-          // Add an extra ".." so it goes out of controllers, out of src, into uploads
-          const oldFilePath = path.join(
-            __dirname,
-            "..",
-            "..",
-            "uploads",
-            "users",
-            path.basename(currentUser.profileImageUrl)
-          );
-          if (fs.existsSync(oldFilePath)) {
-            fs.unlinkSync(oldFilePath);
-          }
-        } catch (err) {
-          console.error("Error deleting old profile image:", err);
-        }
-      }
-
-      // 2. Save the new string with the /users/ folder included!
-      profileImageUrl = `/uploads/users/${req.file.filename}`;
-
+      // Cloudinary returns the full secure URL in req.file.path
+      profileImageUrl = req.file.path;
     } else if (currentUser.profileImageUrl) {
       profileImageUrl = currentUser.profileImageUrl;
     }
@@ -607,20 +581,6 @@ export const updateProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Update profile error:", error);
-
-    // 3. If the database fails, clean up the file that was just uploaded
-    if (req.file) {
-      try {
-        // Fixed cleanup path to check inside the users folder
-
-        const filePath = path.join(__dirname, "..", "..", "uploads", "users", req.file.filename);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      } catch (err) {
-        console.error("Error deleting file after error:", err);
-      }
-    }
 
     return res.status(500).json({
       message: "Unable to update profile right now.",

@@ -18,7 +18,6 @@ const Cart = () => {
   // QUANTITY HANDLER WITH STOCK CHECK
   // =========================================
   const handleIncreaseQuantity = (item) => {
-    // Check if stockQuantity exists on the item, fallback to Infinity if not tracked
     const maxStock = item.stockQuantity !== undefined ? Number(item.stockQuantity) : Infinity;
 
     if (item.quantity < maxStock) {
@@ -87,6 +86,13 @@ const Cart = () => {
                 const isAtMaxStock = item.quantity >= maxStock;
 
                 // =========================================
+                // PRICE CALCULATION LOGIC
+                // =========================================
+                const regularPrice = Number(item.price);
+                const discountPrice = Number(item.discountPrice);
+                const finalPrice = (discountPrice && discountPrice > 0) ? discountPrice : regularPrice;
+
+                // =========================================
                 // IMAGE URL FIX FOR CART ITEMS
                 // =========================================
                 const BACKEND_URL = "http://localhost:5000";
@@ -113,9 +119,19 @@ const Cart = () => {
                         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1 line-clamp-1">
                           {item.name}
                         </h2>
-                        <span className="text-lg font-black text-orange-500">
-                          Rs. {item.price}
-                        </span>
+                        
+                        {/* Updated Price Display with Strikethrough */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-black text-orange-500">
+                            Rs. {finalPrice.toLocaleString()}
+                          </span>
+                          {discountPrice > 0 && (
+                            <span className="text-sm font-semibold text-gray-400 line-through">
+                              Rs. {regularPrice.toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+
                       </div>
                     </div>
 
@@ -148,7 +164,7 @@ const Cart = () => {
                       {/* Total Item Price + Remove */}
                       <div className="flex flex-col items-end gap-2">
                         <h3 className="hidden sm:block text-xl font-black text-gray-900 dark:text-white">
-                          Rs. {(item.price * item.quantity).toLocaleString()}
+                          Rs. {(finalPrice * item.quantity).toLocaleString()}
                         </h3>
                         <button
                           onClick={() => removeFromCart(item.id)}
@@ -175,21 +191,27 @@ const Cart = () => {
 
                 {/* DYNAMIC ITEM BREAKDOWN */}
                 <div className="space-y-4 mb-6 max-h-[250px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-slate-700">
-                  {cartItems.map((item) => (
-                    <div key={item.id} className="flex justify-between items-start text-sm sm:text-base">
-                      <div className="flex-1 pr-4 text-gray-600 dark:text-gray-400">
-                        <span className="font-bold text-gray-900 dark:text-white mr-2">
-                          {item.quantity}x
-                        </span>
-                        <span className="line-clamp-2 leading-relaxed">
-                          {item.name}
+                  {cartItems.map((item) => {
+                    const regularPrice = Number(item.price);
+                    const discountPrice = Number(item.discountPrice);
+                    const finalPrice = (discountPrice && discountPrice > 0) ? discountPrice : regularPrice;
+
+                    return (
+                      <div key={item.id} className="flex justify-between items-start text-sm sm:text-base">
+                        <div className="flex-1 pr-4 text-gray-600 dark:text-gray-400">
+                          <span className="font-bold text-gray-900 dark:text-white mr-2">
+                            {item.quantity}x
+                          </span>
+                          <span className="line-clamp-2 leading-relaxed">
+                            {item.name}
+                          </span>
+                        </div>
+                        <span className="font-bold text-gray-900 dark:text-white whitespace-nowrap pt-0.5">
+                          Rs. {(finalPrice * item.quantity).toLocaleString()}
                         </span>
                       </div>
-                      <span className="font-bold text-gray-900 dark:text-white whitespace-nowrap pt-0.5">
-                        Rs. {(item.price * item.quantity).toLocaleString()}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className="h-px bg-gray-100 dark:bg-slate-800 w-full mb-6"></div>
