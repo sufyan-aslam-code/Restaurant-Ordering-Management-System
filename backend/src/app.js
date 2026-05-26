@@ -32,7 +32,7 @@ app.use(
 app.use(express.json({ limit: "50mb" }));
 app.use(cookieParser());
 
-// Serve static files from the root uploads folder (going up one level from src)
+// Serve static files from the root uploads folder (You can eventually remove this since you use Cloudinary now!)
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.get("/", (req, res) => {
@@ -52,6 +52,22 @@ app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: "Route not found",
+  });
+});
+
+// =========================================
+// GLOBAL ERROR HANDLER
+// =========================================
+app.use((err, req, res, next) => {
+  console.error(
+    "🔥 GLOBAL SERVER ERROR:",
+    JSON.stringify(err, Object.getOwnPropertyNames(err), 2)
+  );
+
+  res.status(500).json({
+    success: false,
+    message: "An internal server error occurred.",
+    error: err.message,
   });
 });
 

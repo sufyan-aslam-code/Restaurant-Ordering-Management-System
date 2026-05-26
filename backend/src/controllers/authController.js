@@ -7,6 +7,40 @@ import {
   hashToken,
   verifyRefreshToken,
 } from "../utils/token.js";
+import { v2 as cloudinary } from "cloudinary";
+
+// =========================================
+// CLOUDINARY CONFIGURATION
+// =========================================
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// =========================================
+// HELPER: EXTRACT PUBLIC ID FROM URL
+// =========================================
+const extractPublicId = (url) => {
+  if (!url || !url.includes("cloudinary.com")) return null;
+  try {
+    const parts = url.split("/upload/");
+    const pathAfterUpload = parts[1];
+    let pathParts = pathAfterUpload.split("/");
+    
+    // Remove version number if present
+    if (pathParts[0].match(/^v\d+$/)) {
+      pathParts.shift();
+    }
+    
+    const publicIdWithExt = pathParts.join("/");
+    // Remove the file extension
+    return publicIdWithExt.split(".")[0];
+  } catch (error) {
+    console.error("Error extracting public ID:", error);
+    return null;
+  }
+};
 
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 
@@ -131,7 +165,7 @@ export const register = async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const verificationPin = generatePIN();
-    const verificationPinExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
+    const verificationPinExpiresAt = new Date(Date.now() + 15 * 60 * 1000); 
 
     const [result] = await query(
       `
@@ -482,9 +516,7 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({ message: "Reset PIN is invalid or expired." });
     }
 
-    // ----------------------------------------------------
     // NEW CHECK: Prevent reusing the current password
-    // ----------------------------------------------------
     const isSameAsOldPassword = await bcrypt.compare(password, user.passwordHash);
     
     if (isSameAsOldPassword) {
@@ -492,7 +524,6 @@ export const resetPassword = async (req, res) => {
         message: "Please choose a new password. It cannot be the same as your current one." 
       });
     }
-    // ----------------------------------------------------
 
     const passwordHash = await bcrypt.hash(password, 12);
 
@@ -538,10 +569,9 @@ export const me = async (req, res) => {
 // =========================================
 // UPDATE PROFILE
 // =========================================
-
 export const updateProfile = async (req, res) => {
   try {
-    const { fullName, phoneNumber } = req.body;
+    const { fullName, phoneNumber, removeProfileImage } = req.body;
 
     if (!fullName || !phoneNumber) {
       return res.status(400).json({
@@ -550,18 +580,43 @@ export const updateProfile = async (req, res) => {
     }
 
     const userId = req.auth.sub;
-    let profileImageUrl = null;
-
     const currentUser = await getUserById(userId);
+    let profileImageUrl = currentUser.profileImageUrl;
 
     // =========================================
-    // NEW CLOUDINARY IMAGE PATH LOGIC
+    // IMAGE HANDLING LOGIC
     // =========================================
-    if (req.file) {
-      // Cloudinary returns the full secure URL in req.file.path
+    
+    // 1. If user explicitly wants to remove their picture
+    if (removeProfileImage === "true") {
+      if (currentUser.profileImageUrl) {
+        const publicId = extractPublicId(currentUser.profileImageUrl);
+        if (publicId) {
+          try {
+            await cloudinary.uploader.destroy(publicId);
+            console.log(`Deleted profile image from Cloudinary: ${publicId}`);
+          } catch (cloudinaryError) {
+            console.error("Failed to delete profile image:", cloudinaryError);
+          }
+        }
+      }
+      profileImageUrl = null; // Clear from database
+    } 
+    // 2. If user uploaded a NEW picture
+    else if (req.file) {
       profileImageUrl = req.file.path;
-    } else if (currentUser.profileImageUrl) {
-      profileImageUrl = currentUser.profileImageUrl;
+      
+      // Clean up the old one from Cloudinary
+      if (currentUser.profileImageUrl) {
+        const publicId = extractPublicId(currentUser.profileImageUrl);
+        if (publicId) {
+          try {
+            await cloudinary.uploader.destroy(publicId);
+          } catch (cloudinaryError) {
+            console.error("Failed to delete old profile image:", cloudinaryError);
+          }
+        }
+      }
     }
 
     await query(
@@ -620,7 +675,6 @@ export const updatePassword = async (req, res) => {
     const passwordMatches = await bcrypt.compare(currentPassword, user.passwordHash);
     
     if (!passwordMatches) {
-      // If they typed the wrong current password, fail immediately here.
       return res.status(401).json({ message: "Incorrect current password." });
     }
 
@@ -643,5 +697,58 @@ export const updatePassword = async (req, res) => {
   } catch (error) {
     console.error("Update password error:", error);
     return res.status(500).json({ message: "Unable to update password right now." });
+  }
+};
+
+// =========================================
+// DELETE ACCOUNT
+// =========================================
+export const deleteAccount = async (req, res) => {
+  try {
+    const { password } = req.body;
+    const userId = req.auth.sub; 
+
+    if (!password) {
+      return res.status(400).json({ message: "Password is required to delete your account." });
+    }
+
+    // 1. Get the current user to verify the password and get their image URL
+    const currentUser = await getUserById(userId);
+    if (!currentUser) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // 2. Verify Password: User must enter their password to confirm deletion
+    const passwordMatches = await bcrypt.compare(password, currentUser.passwordHash);
+    if (!passwordMatches) {
+      return res.status(401).json({ message: "Incorrect password. Account deletion failed." });
+    }
+
+    // 3. Clean up Cloudinary Image before deleting user from database
+    if (currentUser.profileImageUrl) {
+      const publicId = extractPublicId(currentUser.profileImageUrl);
+      if (publicId) {
+        try {
+          await cloudinary.uploader.destroy(publicId);
+          console.log(`Deleted profile image from Cloudinary during account deletion: ${publicId}`);
+        } catch (cloudinaryError) {
+          console.error("Failed to delete profile image from Cloudinary:", cloudinaryError);
+        }
+      }
+    }
+
+    // 4. Delete the User from the database
+    await query("DELETE FROM users WHERE id = ?", [userId]);
+
+    // 5. Clear authentication cookies on the response
+    clearRefreshCookie(res);
+
+    return res.json({ message: "Account deleted successfully. Logging you out." });
+
+  } catch (error) {
+    console.error("Delete account error:", error);
+    return res.status(500).json({
+      message: "Unable to delete account right now. Please try again later.",
+    });
   }
 };

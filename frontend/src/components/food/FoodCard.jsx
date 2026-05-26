@@ -12,13 +12,10 @@ const FoodCard = ({ food }) => {
   const { isAuthenticated, user } = useAuth();
 
   // =========================================
-  // IMAGE URL FIX
+  // IMAGE URL
   // =========================================
-  // If the image already has "http", use it. Otherwise, attach your backend URL.
-  const BACKEND_URL = "http://localhost:5000";
-  const imageUrl = food.image?.startsWith("http") 
-    ? food.image 
-    : `${BACKEND_URL}${food.image}`;
+  // Cloudinary already provides a full image URL
+  const imageUrl = food.image || "/fallback-image.png";
 
   // =========================================
   // STOCK LOGIC
@@ -69,7 +66,6 @@ const FoodCard = ({ food }) => {
     >
       {/* IMAGE */}
       <div className="relative overflow-hidden">
-        {/* USING THE FIXED IMAGE URL HERE */}
         <img
           src={imageUrl}
           alt={food.name}
@@ -125,7 +121,6 @@ const FoodCard = ({ food }) => {
 
         {/* FOOTER */}
         <div className="mt-auto flex items-center justify-between gap-3">
-          
           {/* STOCK INDICATOR */}
           <div className="flex items-center gap-2 min-w-0">
             <div
@@ -133,6 +128,7 @@ const FoodCard = ({ food }) => {
                 isInStock ? "bg-green-500" : "bg-red-500"
               }`}
             />
+
             <span
               className={`text-sm font-semibold whitespace-nowrap ${
                 isInStock ? "text-green-600" : "text-red-500"
@@ -142,7 +138,7 @@ const FoodCard = ({ food }) => {
             </span>
           </div>
 
-          {/* ADD TO CART BUTTON (Hidden for Admins AND Hidden if Out of Stock) */}
+          {/* ADD TO CART BUTTON */}
           {user?.role !== "admin" && isInStock && (
             <Button
               onClick={handleAddToCart}
@@ -152,7 +148,6 @@ const FoodCard = ({ food }) => {
               Add to Cart
             </Button>
           )}
-
         </div>
       </div>
     </div>

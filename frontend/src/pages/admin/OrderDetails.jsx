@@ -75,7 +75,7 @@ const OrderDetails = ({
 
                     {item.image ? (
                       <img
-                        src={item.image}
+                        src={item.image || "/placeholder-food.jpg"}
                         alt={item.name}
                         className="w-12 h-12 rounded-xl object-cover bg-gray-100 border border-gray-200"
                       />

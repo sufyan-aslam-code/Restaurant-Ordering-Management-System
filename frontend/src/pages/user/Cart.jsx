@@ -18,12 +18,17 @@ const Cart = () => {
   // QUANTITY HANDLER WITH STOCK CHECK
   // =========================================
   const handleIncreaseQuantity = (item) => {
-    const maxStock = item.stockQuantity !== undefined ? Number(item.stockQuantity) : Infinity;
+    const maxStock =
+      item.stockQuantity !== undefined
+        ? Number(item.stockQuantity)
+        : Infinity;
 
     if (item.quantity < maxStock) {
       increaseQuantity(item.id);
     } else {
-      toast.warning(`Sorry, we only have ${maxStock} of these in stock right now.`);
+      toast.warning(
+        `Sorry, we only have ${maxStock} of these in stock right now.`
+      );
     }
   };
 
@@ -36,14 +41,22 @@ const Cart = () => {
         <Container>
           <div className="max-w-xl mx-auto bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-[2.5rem] shadow-xl border border-white/60 dark:border-slate-800 p-10 sm:p-14 text-center">
             <div className="w-24 h-24 sm:w-28 sm:h-28 mx-auto rounded-full bg-gradient-to-br from-orange-100 to-orange-50 dark:from-orange-500/20 dark:to-orange-500/5 flex items-center justify-center mb-8 shadow-inner">
-              <ShoppingBag size={48} className="text-orange-500" strokeWidth={1.5} />
+              <ShoppingBag
+                size={48}
+                className="text-orange-500"
+                strokeWidth={1.5}
+              />
             </div>
+
             <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mb-4 tracking-tight">
               Your Cart is Empty
             </h1>
+
             <p className="text-gray-500 dark:text-gray-400 text-lg leading-relaxed mb-10">
-              Looks like you haven’t added anything yet. Start exploring delicious meals now.
+              Looks like you haven’t added anything yet. Start exploring
+              delicious meals now.
             </p>
+
             <div className="flex justify-center">
               <Link to="/menu">
                 <Button className="px-8 py-4 rounded-2xl">
@@ -69,6 +82,7 @@ const Cart = () => {
             <h1 className="text-4xl sm:text-5xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">
               Shopping Cart
             </h1>
+
             <p className="text-lg text-gray-500 dark:text-gray-400 font-medium">
               Review your selected food items before checkout.
             </p>
@@ -82,7 +96,11 @@ const Cart = () => {
             ========================================= */}
             <div className="lg:col-span-7 xl:col-span-8 space-y-5">
               {cartItems.map((item) => {
-                const maxStock = item.stockQuantity !== undefined ? Number(item.stockQuantity) : Infinity;
+                const maxStock =
+                  item.stockQuantity !== undefined
+                    ? Number(item.stockQuantity)
+                    : Infinity;
+
                 const isAtMaxStock = item.quantity >= maxStock;
 
                 // =========================================
@@ -90,15 +108,17 @@ const Cart = () => {
                 // =========================================
                 const regularPrice = Number(item.price);
                 const discountPrice = Number(item.discountPrice);
-                const finalPrice = (discountPrice && discountPrice > 0) ? discountPrice : regularPrice;
+
+                const finalPrice =
+                  discountPrice && discountPrice > 0
+                    ? discountPrice
+                    : regularPrice;
 
                 // =========================================
-                // IMAGE URL FIX FOR CART ITEMS
+                // CLOUDINARY IMAGE URL
                 // =========================================
-                const BACKEND_URL = "http://localhost:5000";
-                const imageUrl = item.image?.startsWith("http")
-                  ? item.image
-                  : `${BACKEND_URL}${item.image}`;
+                const imageUrl =
+                  item.image || "/fallback-image.png";
 
                 return (
                   <div
@@ -112,26 +132,28 @@ const Cart = () => {
                         alt={item.name}
                         className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover shadow-sm border border-gray-50 dark:border-slate-800/50"
                       />
+
                       <div className="flex flex-col">
                         <span className="inline-block px-2.5 py-1 rounded-lg bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-500 text-[10px] font-extrabold uppercase tracking-wider mb-2 w-fit">
                           {item.category || "Food"}
                         </span>
+
                         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1 line-clamp-1">
                           {item.name}
                         </h2>
-                        
-                        {/* Updated Price Display with Strikethrough */}
+
+                        {/* Updated Price Display */}
                         <div className="flex items-center gap-2">
                           <span className="text-lg font-black text-orange-500">
                             Rs. {finalPrice.toLocaleString()}
                           </span>
+
                           {discountPrice > 0 && (
                             <span className="text-sm font-semibold text-gray-400 line-through">
                               Rs. {regularPrice.toLocaleString()}
                             </span>
                           )}
                         </div>
-
                       </div>
                     </div>
 
@@ -166,6 +188,7 @@ const Cart = () => {
                         <h3 className="hidden sm:block text-xl font-black text-gray-900 dark:text-white">
                           Rs. {(finalPrice * item.quantity).toLocaleString()}
                         </h3>
+
                         <button
                           onClick={() => removeFromCart(item.id)}
                           className="text-sm font-semibold text-red-500 hover:text-red-600 dark:hover:text-red-400 flex items-center gap-1.5 transition-colors bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 px-3 py-1.5 rounded-lg"
@@ -194,18 +217,27 @@ const Cart = () => {
                   {cartItems.map((item) => {
                     const regularPrice = Number(item.price);
                     const discountPrice = Number(item.discountPrice);
-                    const finalPrice = (discountPrice && discountPrice > 0) ? discountPrice : regularPrice;
+
+                    const finalPrice =
+                      discountPrice && discountPrice > 0
+                        ? discountPrice
+                        : regularPrice;
 
                     return (
-                      <div key={item.id} className="flex justify-between items-start text-sm sm:text-base">
+                      <div
+                        key={item.id}
+                        className="flex justify-between items-start text-sm sm:text-base"
+                      >
                         <div className="flex-1 pr-4 text-gray-600 dark:text-gray-400">
                           <span className="font-bold text-gray-900 dark:text-white mr-2">
                             {item.quantity}x
                           </span>
+
                           <span className="line-clamp-2 leading-relaxed">
                             {item.name}
                           </span>
                         </div>
+
                         <span className="font-bold text-gray-900 dark:text-white whitespace-nowrap pt-0.5">
                           Rs. {(finalPrice * item.quantity).toLocaleString()}
                         </span>
@@ -218,20 +250,33 @@ const Cart = () => {
 
                 <div className="space-y-4 mb-8">
                   <div className="flex items-center justify-between text-base">
-                    <span className="text-gray-500 dark:text-gray-400 font-medium">Total Items</span>
+                    <span className="text-gray-500 dark:text-gray-400 font-medium">
+                      Total Items
+                    </span>
+
                     <span className="font-bold text-gray-900 dark:text-white">
-                      {cartItems.reduce((acc, item) => acc + item.quantity, 0)}
+                      {cartItems.reduce(
+                        (acc, item) => acc + item.quantity,
+                        0
+                      )}
                     </span>
                   </div>
+
                   <div className="flex items-center justify-between text-base">
-                    <span className="text-gray-500 dark:text-gray-400 font-medium">Delivery Fee</span>
-                    <span className="font-bold text-green-500 bg-green-50 dark:bg-green-500/10 px-2 py-0.5 rounded-md">Free</span>
+                    <span className="text-gray-500 dark:text-gray-400 font-medium">
+                      Delivery Fee
+                    </span>
+
+                    <span className="font-bold text-green-500 bg-green-50 dark:bg-green-500/10 px-2 py-0.5 rounded-md">
+                      Free
+                    </span>
                   </div>
 
                   <div className="border-t border-gray-100 dark:border-slate-800 pt-5 mt-5 flex items-end justify-between">
                     <span className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
                       Total
                     </span>
+
                     <span className="text-3xl sm:text-4xl font-black text-orange-500 tracking-tight">
                       <span className="text-2xl mr-1">Rs.</span>
                       {totalPrice.toLocaleString()}

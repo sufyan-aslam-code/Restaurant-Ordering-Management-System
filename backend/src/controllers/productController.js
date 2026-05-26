@@ -1,13 +1,46 @@
 import pool from "../config/db.js";
+import { v2 as cloudinary } from "cloudinary";
+
+// =========================================
+// CLOUDINARY CONFIGURATION
+// =========================================
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// =========================================
+// HELPER: EXTRACT PUBLIC ID FROM URL
+// =========================================
+const extractPublicId = (url) => {
+  if (!url || !url.includes("cloudinary.com")) return null;
+
+  try {
+    const parts = url.split("/upload/");
+    const pathAfterUpload = parts[1];
+
+    let pathParts = pathAfterUpload.split("/");
+
+    if (/^v\d+$/.test(pathParts[0])) {
+      pathParts.shift();
+    }
+
+    const publicIdWithExt = pathParts.join("/");
+
+    return publicIdWithExt.replace(/\.[^/.]+$/, "");
+  } catch (error) {
+    console.error("Error extracting public ID:", error);
+    return null;
+  }
+};
 
 // SAFE JSON PARSER
 const safeJSONParse = (value) => {
   try {
-    // Already parsed array/object
     if (Array.isArray(value) || typeof value === "object") {
       return value;
     }
-    // Empty/null fallback
     if (!value) {
       return [];
     }
@@ -23,9 +56,6 @@ const safeJSONParse = (value) => {
 
 export const getProducts = async (req, res) => {
   try {
-    // =========================================
-    // QUERY PARAMS
-    // =========================================
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const offset = (page - 1) * limit;
@@ -33,9 +63,6 @@ export const getProducts = async (req, res) => {
     const category = req.query.category || "";
     const sort = req.query.sort || "latest";
 
-    // =========================================
-    // BASE QUERY
-    // =========================================
     let query = `
       SELECT
         products.*,
@@ -56,9 +83,6 @@ export const getProducts = async (req, res) => {
 
     const values = [];
 
-    // =========================================
-    // SEARCH
-    // =========================================
     if (search) {
       query += `
         AND (
@@ -75,18 +99,12 @@ export const getProducts = async (req, res) => {
       values.push(`%${search}%`, `%${search}%`);
     }
 
-    // =========================================
-    // CATEGORY FILTER
-    // =========================================
     if (category) {
       query += ` AND categories.name = ? `;
       countQuery += ` AND categories.name = ? `;
       values.push(category);
     }
 
-    // =========================================
-    // SORTING
-    // =========================================
     if (sort === "price_asc") {
       query += ` ORDER BY products.price ASC `;
     } else if (sort === "price_desc") {
@@ -97,59 +115,36 @@ export const getProducts = async (req, res) => {
       query += ` ORDER BY products.createdAt DESC `;
     }
 
-    // =========================================
-    // PAGINATION
-    // =========================================
     query += ` LIMIT ? OFFSET ? `;
     const finalValues = [...values, limit, offset];
 
-    // =========================================
-    // GET PRODUCTS
-    // =========================================
-    const [products] = await pool.query(
-      query,
-      finalValues
-    );
-
-    // =========================================
-    // GET TOTAL COUNT
-    // =========================================
-    const [totalResult] = await pool.query(
-      countQuery,
-      values
-    );
+    const [products] = await pool.query(query, finalValues);
+    const [totalResult] = await pool.query(countQuery, values);
 
     const totalProducts = totalResult[0].total;
     const totalPages = Math.ceil(totalProducts / limit);
 
-    // =========================================
-    // FORMAT PRODUCTS
-    // =========================================
-    const formattedProducts = products.map(product => ({
+    const formattedProducts = products.map((product) => ({
       ...product,
       ingredients: safeJSONParse(product.ingredients),
       instructions: safeJSONParse(product.instructions),
       tags: safeJSONParse(product.tags),
-      mealType: safeJSONParse(product.mealType)
+      mealType: safeJSONParse(product.mealType),
     }));
 
-    // =========================================
-    // RESPONSE
-    // =========================================
     res.status(200).json({
       success: true,
       currentPage: page,
       totalPages,
       totalProducts,
       count: formattedProducts.length,
-      products: formattedProducts
+      products: formattedProducts,
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: "Failed to fetch products"
+      message: "Failed to fetch products",
     });
   }
 };
@@ -178,7 +173,7 @@ export const getSingleProduct = async (req, res) => {
     if (products.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Product not found"
+        message: "Product not found",
       });
     }
 
@@ -187,19 +182,18 @@ export const getSingleProduct = async (req, res) => {
       ingredients: safeJSONParse(products[0].ingredients),
       instructions: safeJSONParse(products[0].instructions),
       tags: safeJSONParse(products[0].tags),
-      mealType: safeJSONParse(products[0].mealType)
+      mealType: safeJSONParse(products[0].mealType),
     };
 
     res.status(200).json({
       success: true,
-      product
+      product,
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: "Failed to fetch product"
+      message: "Failed to fetch product",
     });
   }
 };
@@ -226,70 +220,42 @@ export const createProduct = async (req, res) => {
       rating,
     } = req.body;
 
-    // =========================================
-    // NEW CLOUDINARY IMAGE PATH LOGIC
-    // =========================================
-    const image = req.file
-      ? req.file.path // <-- Grabs the full Cloudinary URL
-      : "";
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Image is required",
+      });
+    }
 
-    // ARRAY FORMAT
-    const ingredientsArray =
-      ingredients
-        ? ingredients
-            .split(",")
-            .map((item) => item.trim())
-        : [];
+    const image = req.file.path;
 
-    const tagsArray =
-      tags
-        ? tags
-            .split(",")
-            .map((item) => item.trim())
-        : [];
-
-    const mealTypeArray =
-      mealType
-        ? mealType
-            .split(",")
-            .map((item) => item.trim())
-        : [];
+    const ingredientsArray = ingredients ? ingredients.split(",").map((item) => item.trim()) : [];
+    const tagsArray = tags ? tags.split(",").map((item) => item.trim()) : [];
+    const mealTypeArray = mealType ? mealType.split(",").map((item) => item.trim()) : [];
 
     const [result] = await pool.query(
       `
       INSERT INTO products (
-        categoryId,
-        name,
-        slug,
-        description,
-        image,
-        cuisine,
-        calories,
-        ingredients,
-        tags,
-        mealType,
-        price,
-        discountPrice,
-        stockQuantity,
-        rating
+        categoryId, name, slug, description, image, cuisine, calories,
+        ingredients, tags, mealType, price, discountPrice, stockQuantity, rating
       )
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
-        categoryId,
+        Number(categoryId),
         name,
         slug,
         description,
         image,
         cuisine,
-        calories,
+        Number(calories),
         JSON.stringify(ingredientsArray),
         JSON.stringify(tagsArray),
         JSON.stringify(mealTypeArray),
-        price,
-        discountPrice || null,
-        stockQuantity || 0,
-        rating || 0,
+        Number(price),
+        discountPrice ? Number(discountPrice) : null,
+        Number(stockQuantity || 0),
+        Number(rating || 0),
       ]
     );
 
@@ -298,7 +264,6 @@ export const createProduct = async (req, res) => {
       message: "Product created successfully",
       productId: result.insertId,
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -331,16 +296,10 @@ export const updateProduct = async (req, res) => {
       rating,
     } = req.body;
 
-    // GET OLD PRODUCT
-    const [existingProducts] =
-      await pool.query(
-        `
-        SELECT image
-        FROM products
-        WHERE id = ?
-        `,
-        [id]
-      );
+    const [existingProducts] = await pool.query(
+      `SELECT image FROM products WHERE id = ?`,
+      [id]
+    );
 
     if (existingProducts.length === 0) {
       return res.status(404).json({
@@ -349,72 +308,56 @@ export const updateProduct = async (req, res) => {
       });
     }
 
-    // =========================================
-    // NEW CLOUDINARY IMAGE PATH LOGIC
-    // =========================================
-    // KEEP OLD IMAGE IF NEW NOT UPLOADED
-    const image = req.file
-      ? req.file.path // <-- Grabs the full Cloudinary URL
-      : existingProducts[0].image;
+    let image = existingProducts[0].image;
 
-    // ARRAY FORMAT
-    const ingredientsArray =
-      ingredients
-        ? ingredients
-            .split(",")
-            .map((item) => item.trim())
-        : [];
+    // If a new image is uploaded, handle the replacement logic
+    if (req.file) {
+      image = req.file.path; // Set new Cloudinary URL
 
-    const tagsArray =
-      tags
-        ? tags
-            .split(",")
-            .map((item) => item.trim())
-        : [];
+      // Delete the old image from Cloudinary
+      const oldImageUrl = existingProducts[0].image;
+      if (oldImageUrl) {
+        const publicId = extractPublicId(oldImageUrl);
+        if (publicId) {
+          try {
+            await cloudinary.uploader.destroy(publicId);
+            console.log(`Deleted old image from Cloudinary: ${publicId}`);
+          } catch (cloudinaryError) {
+            console.error("Failed to delete old image from Cloudinary:", cloudinaryError);
+          }
+        }
+      }
+    }
 
-    const mealTypeArray =
-      mealType
-        ? mealType
-            .split(",")
-            .map((item) => item.trim())
-        : [];
+    const ingredientsArray = ingredients ? ingredients.split(",").map((item) => item.trim()) : [];
+    const tagsArray = tags ? tags.split(",").map((item) => item.trim()) : [];
+    const mealTypeArray = mealType ? mealType.split(",").map((item) => item.trim()) : [];
 
     await pool.query(
       `
       UPDATE products
       SET
-        categoryId = ?,
-        name = ?,
-        slug = ?,
-        description = ?,
-        image = ?,
-        cuisine = ?,
-        calories = ?,
-        ingredients = ?,
-        tags = ?,
-        mealType = ?,
-        price = ?,
-        discountPrice = ?,
-        stockQuantity = ?,
-        rating = ?
+        categoryId = ?, name = ?, slug = ?, description = ?, image = ?,
+        cuisine = ?, calories = ?, ingredients = ?, tags = ?, mealType = ?,
+        price = ?, discountPrice = ?, stockQuantity = ?, rating = ?
       WHERE id = ?
       `,
       [
-        categoryId,
+        Number(categoryId),
         name,
         slug,
         description,
         image,
         cuisine,
-        calories,
+        Number(calories),
         JSON.stringify(ingredientsArray),
         JSON.stringify(tagsArray),
         JSON.stringify(mealTypeArray),
-        price,
-        discountPrice || null,
-        stockQuantity || 0,
-        rating || 0,
-        id,
+        Number(price),
+        discountPrice ? Number(discountPrice) : null,
+        Number(stockQuantity || 0),
+        Number(rating || 0),
+        Number(id),
       ]
     );
 
@@ -422,7 +365,6 @@ export const updateProduct = async (req, res) => {
       success: true,
       message: "Product updated successfully",
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -440,19 +382,40 @@ export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
-    await pool.query(
-      `
-      DELETE FROM products
-      WHERE id = ?
-      `,
+    // 1. Get the image URL before deleting the product
+    const [existingProducts] = await pool.query(
+      `SELECT image FROM products WHERE id = ?`,
       [id]
     );
+
+    if (existingProducts.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    // 2. Delete the record from the database
+    await pool.query(`DELETE FROM products WHERE id = ?`, [id]);
+
+    // 3. Delete the image from Cloudinary
+    const imageUrl = existingProducts[0].image;
+    if (imageUrl) {
+      const publicId = extractPublicId(imageUrl);
+      if (publicId) {
+        try {
+          await cloudinary.uploader.destroy(publicId);
+          console.log(`Deleted image from Cloudinary: ${publicId}`);
+        } catch (cloudinaryError) {
+          console.error("Failed to delete image from Cloudinary:", cloudinaryError);
+        }
+      }
+    }
 
     res.status(200).json({
       success: true,
       message: "Product deleted successfully",
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -472,19 +435,14 @@ export const updateStock = async (req, res) => {
     const { stockQuantity } = req.body;
 
     await pool.query(
-      `
-      UPDATE products
-      SET stockQuantity = ?
-      WHERE id = ?
-      `,
-      [stockQuantity, id]
+      `UPDATE products SET stockQuantity = ? WHERE id = ?`,
+      [Number(stockQuantity), Number(id)]
     );
 
     res.status(200).json({
       success: true,
       message: "Stock updated successfully",
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
