@@ -1,32 +1,51 @@
-import nodemailer from "nodemailer";
+import SibApiV3Sdk from "sib-api-v3-sdk";
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: 465,
-  secure: true,
+const defaultClient = SibApiV3Sdk.ApiClient.instance;
 
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: (process.env.SMTP_PASS || "").trim(),
-  },
+const apiKey =
+  defaultClient.authentications["api-key"];
 
-  connectionTimeout: 10000,
-});
+apiKey.apiKey = process.env.BREVO_API_KEY;
 
-export const sendMail = async ({ to, subject, html }) => {
+const apiInstance =
+  new SibApiV3Sdk.TransactionalEmailsApi();
+
+export const sendMail = async ({
+  to,
+  subject,
+  html,
+}) => {
   try {
-    const result = await transporter.sendMail({
-      from: process.env.SMTP_FROM,
-      to,
-      subject,
-      html,
-    });
+    const sendSmtpEmail =
+      new SibApiV3Sdk.SendSmtpEmail();
 
-    console.log("✅ Email sent successfully:", result.messageId);
+    sendSmtpEmail.subject = subject;
+    sendSmtpEmail.htmlContent = html;
+
+    sendSmtpEmail.sender = {
+      name: "FoodFusion",
+      email: process.env.SMTP_FROM,
+    };
+
+    sendSmtpEmail.to = [{ email: to }];
+
+    const result =
+      await apiInstance.sendTransacEmail(
+        sendSmtpEmail
+      );
+
+    console.log(
+      "✅ Email sent successfully:",
+      result
+    );
 
     return result;
   } catch (error) {
-    console.error("❌ Email sending failed:", error);
+    console.error(
+      "❌ Email sending failed:",
+      error
+    );
+
     throw error;
   }
 };
