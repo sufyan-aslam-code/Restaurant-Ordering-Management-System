@@ -23,7 +23,7 @@ const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  
+
   // Destructure user to handle role-based UI
   const { isAuthenticated, user } = useAuth();
 
@@ -51,12 +51,9 @@ const ProductDetails = () => {
   }, [id]);
 
   // =========================================
-  // IMAGE URL FIX
+  // CLOUDINARY IMAGE URL
   // =========================================
-  const BACKEND_URL = "http://localhost:5000";
-  const imageUrl = food?.image?.startsWith("http") 
-    ? food.image 
-    : `${BACKEND_URL}${food?.image}`;
+  const imageUrl = food?.image || "/fallback-image.png";
 
   // =========================================
   // STOCK LOGIC
@@ -98,9 +95,9 @@ const ProductDetails = () => {
 
     addToCart(food, quantity);
     toast.success(`Added ${quantity} ${food.name} to cart!`);
-    
+
     // Optional: Reset quantity back to 1 after adding to cart
-    setQuantity(1); 
+    setQuantity(1);
   };
 
   // =========================================
@@ -155,11 +152,11 @@ const ProductDetails = () => {
     <section className="py-8 sm:py-12 lg:py-20 min-h-screen bg-[#f8f4ee] dark:bg-slate-950 font-sans pb-32 sm:pb-12 relative">
       <Container>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start max-w-6xl mx-auto">
-          
+
           {/* LEFT SIDE: IMAGE */}
           <div className="lg:col-span-5 h-full">
             <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-xl border border-gray-100 dark:border-slate-800 relative group aspect-square lg:aspect-[4/5] sticky top-24">
-              
+
               {/* Out of Stock Overlay */}
               {!isInStock && (
                 <div className="absolute inset-0 bg-white/40 dark:bg-black/50 backdrop-blur-[2px] z-10 flex items-center justify-center">
@@ -173,9 +170,8 @@ const ProductDetails = () => {
               <img
                 src={imageUrl}
                 alt={food.name}
-                className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${
-                  !isInStock ? "grayscale opacity-80" : ""
-                }`}
+                className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${!isInStock ? "grayscale opacity-80" : ""
+                  }`}
               />
             </div>
           </div>
@@ -183,7 +179,7 @@ const ProductDetails = () => {
           {/* RIGHT SIDE: DETAILS */}
           <div className="lg:col-span-7">
             <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 sm:p-10 shadow-xl border border-gray-100 dark:border-slate-800">
-              
+
               {/* HEADER: CATEGORY & RATING */}
               <div className="flex items-center justify-between mb-6">
                 <span className="inline-flex items-center px-4 py-1.5 rounded-full bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-500 text-xs font-extrabold uppercase tracking-wider">
@@ -239,7 +235,7 @@ const ProductDetails = () => {
 
               {/* BOTTOM BAR (Sticky on mobile, static on desktop) */}
               <div className="fixed bottom-0 left-0 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl p-5 border-t border-gray-200 dark:border-slate-800 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] sm:static sm:p-0 sm:border-0 sm:shadow-none sm:bg-transparent z-50 flex flex-col sm:flex-row sm:items-end justify-between gap-5 sm:gap-6 rounded-t-3xl sm:rounded-none">
-                
+
                 {/* PRICE CALCULATION */}
                 <div className="flex flex-row sm:flex-col items-center sm:items-start justify-between sm:justify-end w-full sm:w-auto h-full pb-1">
                   <p className="text-sm text-gray-500 dark:text-gray-400 font-semibold mb-0 sm:mb-1 uppercase tracking-wider">
@@ -263,7 +259,7 @@ const ProductDetails = () => {
                 {/* ACTIONS (Only renders if User AND In Stock) */}
                 {user?.role !== "admin" && isInStock && (
                   <div className="flex items-stretch gap-3 w-full sm:w-auto">
-                    
+
                     {/* QUANTITY SELECTOR */}
                     <div className="flex items-center justify-between bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-2xl h-14 w-36 px-1.5">
                       <button

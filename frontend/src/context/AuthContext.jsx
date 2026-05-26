@@ -11,7 +11,8 @@ import {
   getMyProfile,
   logoutUser,
   updateMyProfile,
-  updateMyPassword, // 1. Imported the new API function
+  updateMyPassword, 
+  deleteMyAccount, // <-- 1. Imported the new API function
 } from "../api/auth";
 import {
   clearAuthSession,
@@ -76,9 +77,14 @@ export const AuthProvider = ({ children }) => {
     return response.data;
   }, []);
 
-  // 2. Created the context function to handle the password update
   const updatePassword = useCallback(async (payload) => {
     const response = await updateMyPassword(payload);
+    return response.data;
+  }, []);
+
+  // <-- 2. Created the context function to handle account deletion
+  const deleteAccount = useCallback(async (password) => {
+    const response = await deleteMyAccount({ password });
     return response.data;
   }, []);
 
@@ -90,7 +96,8 @@ export const AuthProvider = ({ children }) => {
       login,
       logout,
       updateProfile,
-      updatePassword, // 3. Added to the provided value
+      updatePassword, 
+      deleteAccount, // <-- 3. Added to the provided value
       refreshProfile: syncProfile,
     }),
     [
@@ -100,7 +107,8 @@ export const AuthProvider = ({ children }) => {
       login,
       logout,
       updateProfile,
-      updatePassword, // 4. Added to dependencies
+      updatePassword, 
+      deleteAccount, // <-- 4. Added to dependencies
       syncProfile,
     ]
   );

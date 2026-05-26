@@ -36,3 +36,9 @@ export const logoutUser = () =>
 
 export const updateMyPassword = (payload) =>
   apiClient.put("/auth/update-password", payload);
+
+// =========================================
+// NEW: Delete Account
+// =========================================
+export const deleteMyAccount = (payload) =>
+  apiClient.delete("/auth/delete-account", { data: payload });

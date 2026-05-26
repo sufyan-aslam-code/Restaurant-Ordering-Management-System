@@ -473,17 +473,13 @@ const ManageFoods = () => {
                   <div className="relative">
 
                     <img
-                      src={
-                        food.image?.startsWith("http")
-                          ? food.image
-                          : `http://localhost:5000${food.image}`
-                      }
+                      src={food.image || "/placeholder-food.jpg"}
                       alt={food.name}
                       className="
-    w-full
-    h-56
-    object-cover
-  "
+                        w-full
+                        h-56
+                        object-cover
+                      "
                     />
 
                     {/* RATING */}
@@ -784,6 +780,7 @@ const ManageFoods = () => {
         onSuccess={refreshFoods}
         food={selectedFood}
       />
+
       <ConfirmModal
         isOpen={deleteModal.open}
         title="Delete Food"

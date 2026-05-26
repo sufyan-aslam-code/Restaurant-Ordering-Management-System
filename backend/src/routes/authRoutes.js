@@ -11,7 +11,8 @@ import {
   resetPassword,
   me,
   updateProfile,
-  updatePassword, // <-- Added this import
+  updatePassword,
+  deleteAccount, // <-- Added this import
 } from "../controllers/authController.js";
 
 import { requireAuth } from "../middlewares/authMiddleware.js";
@@ -59,5 +60,8 @@ router.put(
 
 // Update Password
 router.put("/update-password", requireAuth, updatePassword);
+
+// Delete Account
+router.delete("/delete-account", requireAuth, deleteAccount); // <-- Added this route
 
 export default router;

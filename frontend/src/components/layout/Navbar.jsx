@@ -102,7 +102,7 @@ const Navbar = () => {
       <Container>
         <div className="flex items-center justify-between py-3 sm:py-4">
           
-          {/* Logo - Now uses dynamic defaultPath */}
+          {/* Logo */}
           <NavLink to={defaultPath} onClick={() => setMobileMenuOpen(false)}>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-400 cursor-pointer tracking-tight">
               FoodieHub
@@ -142,7 +142,7 @@ const Navbar = () => {
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
-            {/* Cart Button */}
+            {/* Cart Button (Always visible on mobile next to hamburger) */}
             {user?.role !== "admin" && (
               <NavLink
                 to="/cart"
@@ -158,9 +158,9 @@ const Navbar = () => {
               </NavLink>
             )}
 
-            {/* User Profile / Login */}
+            {/* DESKTOP ONLY: User Profile Dropdown */}
             {isAuthenticated ? (
-              <div className="relative" ref={profileMenuRef}>
+              <div className="relative hidden md:block" ref={profileMenuRef}>
                 <button
                   type="button"
                   onClick={() => setMenuOpen((prev) => !prev)}
@@ -168,7 +168,7 @@ const Navbar = () => {
                 >
                   {user?.profileImageUrl ? (
                     <img
-                      src={`http://localhost:5000${user.profileImageUrl}`}
+                      src={user.profileImageUrl}
                       alt={user?.fullName}
                       className="h-8 w-8 rounded-full object-cover"
                       onError={(e) => {
@@ -181,12 +181,12 @@ const Navbar = () => {
                     </div>
                   )}
 
-                  <span className="hidden md:inline text-sm font-bold text-gray-700 dark:text-gray-200">
+                  <span className="text-sm font-bold text-gray-700 dark:text-gray-200">
                     {user?.fullName?.split(" ")[0] || "Profile"}
                   </span>
                 </button>
 
-                {/* Profile Dropdown */}
+                {/* Desktop Profile Dropdown */}
                 {menuOpen && (
                   <div className="absolute right-0 z-50 mt-3 w-56 rounded-2xl border border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 shadow-2xl dark:shadow-none animate-in slide-in-from-top-2 fade-in duration-200">
                     <button
@@ -229,14 +229,14 @@ const Navbar = () => {
                 )}
               </div>
             ) : (
-              <NavLink to="/login" className="hidden sm:block">
+              <NavLink to="/login" className="hidden md:block">
                 <Button className="px-6 py-2 rounded-xl font-semibold shadow-md shadow-orange-500/20">
                   Login
                 </Button>
               </NavLink>
             )}
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Hamburger Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2.5 rounded-xl border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 hover:border-orange-500 hover:text-orange-500 transition-colors ml-1"
@@ -248,12 +248,42 @@ const Navbar = () => {
         </div>
       </Container>
 
-      {/* Mobile Navigation Dropdown */}
+      {/* MOBILE NAVIGATION DROPDOWN */}
+      {/* Increased max-h to 600px to accommodate the added profile section smoothly */}
       <div 
         className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out border-t border-gray-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl ${
-          mobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0 border-none"
+          mobileMenuOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0 border-none"
         }`}
       >
+        {/* Mobile Authenticated User Info Header */}
+        {isAuthenticated && (
+          <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center gap-3">
+            {user?.profileImageUrl ? (
+              <img
+                src={user.profileImageUrl}
+                alt={user?.fullName}
+                className="h-10 w-10 rounded-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = "none";
+                }}
+              />
+            ) : (
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-orange-100 to-orange-50 dark:from-orange-500/20 dark:to-orange-500/10 font-bold text-orange-600 dark:text-orange-500">
+                {userInitials || "U"}
+              </div>
+            )}
+            <div className="flex flex-col">
+              <span className="font-bold text-gray-800 dark:text-gray-200 leading-tight">
+                {user?.fullName}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {user?.email}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Navigation Links */}
         <ul className="flex flex-col px-6 py-4 space-y-2">
           {navigationLinks.map((link) => (
             <li key={link.id}>
@@ -273,8 +303,60 @@ const Navbar = () => {
               </NavLink>
             </li>
           ))}
+
+          {/* Mobile Profile Actions (If Logged In) */}
+          {isAuthenticated && (
+            <>
+              <div className="my-2 h-px bg-gray-100 dark:bg-slate-800"></div>
+              <li>
+                <NavLink
+                  to="/profile"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-2 px-4 py-3 rounded-xl font-semibold transition-colors ${
+                      isActive
+                        ? "bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-500"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800"
+                    }`
+                  }
+                >
+                  <Settings size={18} />
+                  Profile Settings
+                </NavLink>
+              </li>
+
+              {user?.role !== "admin" && (
+                <li>
+                  <NavLink
+                    to="/my-orders"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={({ isActive }) =>
+                      `flex items-center gap-2 px-4 py-3 rounded-xl font-semibold transition-colors ${
+                        isActive
+                          ? "bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-500"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800"
+                      }`
+                    }
+                  >
+                    <UserCircle size={18} />
+                    My Orders
+                  </NavLink>
+                </li>
+              )}
+              
+              <li>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2 px-4 py-3 rounded-xl font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                >
+                  <LogOut size={18} />
+                  Logout
+                </button>
+              </li>
+            </>
+          )}
           
-          {/* Mobile Login Button (if logged out) */}
+          {/* Mobile Login Button (If Logged Out) */}
           {!isAuthenticated && (
             <li className="pt-2">
               <NavLink to="/login" onClick={() => setMobileMenuOpen(false)}>

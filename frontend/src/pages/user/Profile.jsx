@@ -13,7 +13,11 @@ import {
   EyeOff,
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  X,
+  Image as ImageIcon,
+  Trash2,
+  AlertTriangle
 } from "lucide-react";
 
 import Container from "../../components/common/Container";
@@ -30,6 +34,8 @@ const Profile = () => {
     loadingProfile,
     updateProfile,
     updatePassword,
+    deleteAccount, // <-- Using the new context function
+    logout,
   } = useAuth();
 
   // Tab State
@@ -60,8 +66,20 @@ const Profile = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
+
+  // Avatar Menu & Modal State
+  const [showAvatarMenu, setShowAvatarMenu] = useState(false);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  
+  // Account Deletion State
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   const fileInputRef = useRef(null);
+  const avatarMenuRef = useRef(null);
 
   useEffect(() => {
     if (!loadingProfile && !isAuthenticated) {
@@ -78,16 +96,29 @@ const Profile = () => {
     });
     
     if (user.profileImageUrl) {
-      const imageUrl = user.profileImageUrl.startsWith("http")
-        ? user.profileImageUrl
-        : `http://localhost:5000${user.profileImageUrl}`;
-      setProfileImagePreview(imageUrl);
+      setProfileImagePreview(user.profileImageUrl);
     } else {
       setProfileImagePreview("");
     }
     
     setSelectedProfileImage(null);
   }, [user]);
+
+  // Handle outside clicks for Avatar Menu
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (
+        avatarMenuRef.current &&
+        !avatarMenuRef.current.contains(event.target)
+      ) {
+        setShowAvatarMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
 
   const previewImageUrl = useMemo(
     () => profileImagePreview?.trim() || "",
@@ -128,6 +159,34 @@ const Profile = () => {
 
     setProfileMessage("✓ Image selected! Click 'Save Profile' to save.");
     setTimeout(() => setProfileMessage(""), 2000);
+  };
+
+  const handleRemovePicture = async () => {
+    setShowAvatarMenu(false);
+    if (!window.confirm("Are you sure you want to remove your profile picture?")) return;
+
+    setSavingProfile(true);
+    setProfileMessage("");
+    setProfileError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("fullName", profileData.fullName);
+      formData.append("phoneNumber", profileData.phoneNumber);
+      formData.append("removeProfileImage", "true");
+
+      await updateProfile(formData);
+      
+      setProfileImagePreview("");
+      setSelectedProfileImage(null);
+      setProfileMessage("Profile picture removed successfully.");
+    } catch (error) {
+      setProfileError(
+        error?.response?.data?.message || "Unable to remove picture right now."
+      );
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
   const handleProfileSubmit = async (event) => {
@@ -176,7 +235,6 @@ const Profile = () => {
       setPasswordMessage(response.message || "Password updated successfully.");
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
       
-      // Reset visibility toggles on successful save
       setShowCurrentPassword(false);
       setShowNewPassword(false);
       setShowConfirmPassword(false);
@@ -187,6 +245,28 @@ const Profile = () => {
         error?.response?.data?.message || "Unable to update password right now."
       );
       setSavingPassword(false);
+    }
+  };
+
+  // =========================================
+  // UPDATED: Account Deletion Request
+  // =========================================
+  const handleDeleteAccount = async () => {
+    setDeletingAccount(true);
+    setDeleteError("");
+
+    try {
+      // Calling the function from AuthContext to utilize the proper interceptors
+      await deleteAccount(deletePassword);
+      
+      setDeleteModalOpen(false);
+      await logout(); 
+      navigate("/"); 
+      
+    } catch (error) {
+      setDeleteError(error?.response?.data?.message || "Failed to delete account. Please try again.");
+    } finally {
+      setDeletingAccount(false);
     }
   };
 
@@ -202,10 +282,9 @@ const Profile = () => {
   return (
     <section className="py-12 sm:py-20 min-h-screen bg-[#f8f4ee] dark:bg-slate-950">
       <Container>
-        {/* Expanded Max Width and 12-Column Grid */}
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
           
-          {/* Left Column: Avatar & Identity Card (Takes 4 columns on large screens) */}
+          {/* Left Column: Avatar & Identity Card */}
           <div className="lg:col-span-4">
             <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-gray-100 dark:border-slate-800 shadow-xl shadow-slate-200/40 dark:shadow-none p-8 h-fit sticky top-24">
               <div className="flex flex-col items-center text-center">
@@ -217,34 +296,75 @@ const Profile = () => {
                   className="hidden"
                 />
 
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className="cursor-pointer relative group"
-                >
-                  {previewImageUrl ? (
-                    <img
-                      src={previewImageUrl}
-                      alt={profileData.fullName || "Profile"}
-                      className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover ring-4 ring-orange-50 dark:ring-orange-500/10 group-hover:opacity-80 transition-all duration-300 shadow-lg"
-                    />
-                  ) : (
-                    <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gradient-to-br from-orange-100 to-orange-50 dark:from-orange-500/20 dark:to-orange-500/5 text-orange-600 dark:text-orange-500 text-4xl sm:text-5xl font-bold flex items-center justify-center ring-4 ring-white dark:ring-slate-900 group-hover:opacity-80 transition-all duration-300 shadow-lg">
-                      {(profileData.fullName || "U")
-                        .split(" ")
-                        .filter(Boolean)
-                        .slice(0, 2)
-                        .map((part) => part[0]?.toUpperCase() || "")
-                        .join("")}
+                <div className="relative flex flex-col items-center" ref={avatarMenuRef}>
+                  <div
+                    onClick={() => setShowAvatarMenu((prev) => !prev)}
+                    className="cursor-pointer relative group"
+                  >
+                    {previewImageUrl ? (
+                      <img
+                        src={previewImageUrl}
+                        alt={profileData.fullName || "Profile"}
+                        className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover ring-4 ring-orange-50 dark:ring-orange-500/10 group-hover:opacity-80 transition-all duration-300 shadow-lg"
+                      />
+                    ) : (
+                      <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gradient-to-br from-orange-100 to-orange-50 dark:from-orange-500/20 dark:to-orange-500/5 text-orange-600 dark:text-orange-500 text-4xl sm:text-5xl font-bold flex items-center justify-center ring-4 ring-white dark:ring-slate-900 group-hover:opacity-80 transition-all duration-300 shadow-lg">
+                        {(profileData.fullName || "U")
+                          .split(" ")
+                          .filter(Boolean)
+                          .slice(0, 2)
+                          .map((part) => part[0]?.toUpperCase() || "")
+                          .join("")}
+                      </div>
+                    )}
+                    
+                    <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/0 group-hover:bg-black/20 backdrop-blur-[1px] transition-all duration-300">
+                    </div>
+                    
+                    <div className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 bg-white dark:bg-slate-800 p-2 rounded-full shadow-md text-orange-500 border border-gray-100 dark:border-slate-700 pointer-events-none group-hover:scale-110 transition-transform">
+                      <Camera size={16} />
+                    </div>
+                  </div>
+
+                  {/* Avatar Options Dropdown */}
+                  {showAvatarMenu && (
+                    <div className="absolute top-full mt-4 z-20 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 py-2 animate-in fade-in slide-in-from-top-2 overflow-hidden">
+                      {previewImageUrl && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setViewModalOpen(true);
+                            setShowAvatarMenu(false);
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-orange-50 dark:hover:bg-slate-700/50 hover:text-orange-600 transition-colors"
+                        >
+                          <ImageIcon size={18} />
+                          View Picture
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          fileInputRef.current?.click();
+                          setShowAvatarMenu(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-orange-50 dark:hover:bg-slate-700/50 hover:text-orange-600 transition-colors"
+                      >
+                        <Camera size={18} />
+                        {previewImageUrl ? "Update Picture" : "Upload Picture"}
+                      </button>
+                      {previewImageUrl && (
+                        <button
+                          type="button"
+                          onClick={handleRemovePicture}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                        >
+                          <Trash2 size={18} />
+                          Remove Picture
+                        </button>
+                      )}
                     </div>
                   )}
-                  <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/0 group-hover:bg-black/30 backdrop-blur-[1px] transition-all duration-300">
-                    <Camera className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" size={28} />
-                  </div>
-                  
-                  {/* Small edit badge */}
-                  <div className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 bg-white dark:bg-slate-800 p-2 rounded-full shadow-md text-orange-500 border border-gray-100 dark:border-slate-700 pointer-events-none group-hover:scale-110 transition-transform">
-                    <Camera size={16} />
-                  </div>
                 </div>
 
                 <div className="mt-6 space-y-1">
@@ -256,13 +376,12 @@ const Profile = () => {
                   </p>
                 </div>
                 
-                {/* Visual Divider */}
                 <div className="w-12 h-1 bg-orange-100 dark:bg-slate-800 rounded-full mt-6"></div>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Tabbed Settings (Takes 8 columns on large screens) */}
+          {/* Right Column: Tabbed Settings */}
           <div className="lg:col-span-8">
             <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-gray-100 dark:border-slate-800 shadow-xl shadow-slate-200/40 dark:shadow-none p-8 sm:p-10">
               
@@ -302,7 +421,6 @@ const Profile = () => {
               {activeTab === "general" && (
                 <form className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" onSubmit={handleProfileSubmit}>
                   
-                  {/* Alerts */}
                   {profileMessage && (
                     <div className="flex items-center gap-3 rounded-xl border border-green-200 dark:border-green-500/30 bg-green-50/50 dark:bg-green-500/10 px-4 py-3 text-sm text-green-700 dark:text-green-400">
                       <CheckCircle2 size={18} className="shrink-0" />
@@ -378,110 +496,134 @@ const Profile = () => {
 
               {/* Tab Content: Security */}
               {activeTab === "security" && (
-                <form className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" onSubmit={handlePasswordSubmit}>
-                  
-                  {/* Alerts */}
-                  {passwordMessage && (
-                    <div className="flex items-center gap-3 rounded-xl border border-green-200 dark:border-green-500/30 bg-green-50/50 dark:bg-green-500/10 px-4 py-3 text-sm text-green-700 dark:text-green-400">
-                      <CheckCircle2 size={18} className="shrink-0" />
-                      <p>{passwordMessage}</p>
-                    </div>
-                  )}
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <form className="space-y-6" onSubmit={handlePasswordSubmit}>
+                    
+                    {passwordMessage && (
+                      <div className="flex items-center gap-3 rounded-xl border border-green-200 dark:border-green-500/30 bg-green-50/50 dark:bg-green-500/10 px-4 py-3 text-sm text-green-700 dark:text-green-400">
+                        <CheckCircle2 size={18} className="shrink-0" />
+                        <p>{passwordMessage}</p>
+                      </div>
+                    )}
 
-                  {passwordError && (
-                    <div className="flex items-center gap-3 rounded-xl border border-red-200 dark:border-red-500/30 bg-red-50/50 dark:bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-400">
-                      <AlertCircle size={18} className="shrink-0" />
-                      <p>{passwordError}</p>
-                    </div>
-                  )}
+                    {passwordError && (
+                      <div className="flex items-center gap-3 rounded-xl border border-red-200 dark:border-red-500/30 bg-red-50/50 dark:bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+                        <AlertCircle size={18} className="shrink-0" />
+                        <p>{passwordError}</p>
+                      </div>
+                    )}
 
-                  <div className="space-y-1.5 group">
-                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">Current Password</label>
-                    <div className="relative">
-                      <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors" />
-                      <Input
-                        type={showCurrentPassword ? "text" : "password"}
-                        name="currentPassword"
-                        value={passwordData.currentPassword}
-                        onChange={handlePasswordFieldChange}
-                        placeholder="Enter your current password"
-                        className="w-full pl-11 pr-12 py-3.5 bg-gray-50/50 dark:bg-slate-900/50 border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
-                        required
-                      />
+                    <div className="space-y-1.5 group">
+                      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">Current Password</label>
+                      <div className="relative">
+                        <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors" />
+                        <Input
+                          type={showCurrentPassword ? "text" : "password"}
+                          name="currentPassword"
+                          value={passwordData.currentPassword}
+                          onChange={handlePasswordFieldChange}
+                          placeholder="Enter your current password"
+                          className="w-full pl-11 pr-12 py-3.5 bg-gray-50/50 dark:bg-slate-900/50 border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                          tabIndex="-1"
+                        >
+                          {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 group">
+                      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">New Password</label>
+                      <div className="relative">
+                        <Key size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors" />
+                        <Input
+                          type={showNewPassword ? "text" : "password"}
+                          name="newPassword"
+                          value={passwordData.newPassword}
+                          onChange={handlePasswordFieldChange}
+                          placeholder="Create a new password"
+                          className="w-full pl-11 pr-12 py-3.5 bg-gray-50/50 dark:bg-slate-900/50 border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+                          required
+                          minLength={8}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                          tabIndex="-1"
+                        >
+                          {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 group">
+                      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">Confirm New Password</label>
+                      <div className="relative">
+                        <Key size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors" />
+                        <Input
+                          type={showConfirmPassword ? "text" : "password"}
+                          name="confirmPassword"
+                          value={passwordData.confirmPassword}
+                          onChange={handlePasswordFieldChange}
+                          placeholder="Type your new password again"
+                          className="w-full pl-11 pr-12 py-3.5 bg-gray-50/50 dark:bg-slate-900/50 border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+                          required
+                          minLength={8}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                          tabIndex="-1"
+                        >
+                          {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="pt-4">
+                      <Button type="submit" disabled={savingPassword} className="w-full sm:w-auto px-8 py-3.5 rounded-xl text-base font-semibold shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                        {savingPassword ? (
+                          <>
+                            <Loader2 size={18} className="animate-spin" />
+                            Updating Password...
+                          </>
+                        ) : (
+                          "Update Password"
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+
+                  {/* DANGER ZONE - Account Deletion */}
+                  <div className="mt-12 pt-8 border-t border-red-100 dark:border-red-900/30">
+                    <h3 className="text-lg font-bold text-red-600 dark:text-red-500 mb-4 flex items-center gap-2">
+                      <AlertTriangle size={20} />
+                      Danger Zone
+                    </h3>
+                    <div className="bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                      <div>
+                        <h4 className="font-semibold text-red-900 dark:text-red-400 text-lg">Delete Account</h4>
+                        <p className="text-sm text-red-700/80 dark:text-red-400/80 mt-1 max-w-md">
+                          Once you delete your account, there is no going back. All your saved data, orders, and profile information will be permanently removed.
+                        </p>
+                      </div>
                       <button
                         type="button"
-                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-                        tabIndex="-1"
+                        onClick={() => setDeleteModalOpen(true)}
+                        className="shrink-0 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-all shadow-md shadow-red-500/20 active:scale-[0.98]"
                       >
-                        {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        Delete Account
                       </button>
                     </div>
                   </div>
-
-                  <div className="space-y-1.5 group">
-                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">New Password</label>
-                    <div className="relative">
-                      <Key size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors" />
-                      <Input
-                        type={showNewPassword ? "text" : "password"}
-                        name="newPassword"
-                        value={passwordData.newPassword}
-                        onChange={handlePasswordFieldChange}
-                        placeholder="Create a new password"
-                        className="w-full pl-11 pr-12 py-3.5 bg-gray-50/50 dark:bg-slate-900/50 border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
-                        required
-                        minLength={8}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-                        tabIndex="-1"
-                      >
-                        {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5 group">
-                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">Confirm New Password</label>
-                    <div className="relative">
-                      <Key size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors" />
-                      <Input
-                        type={showConfirmPassword ? "text" : "password"}
-                        name="confirmPassword"
-                        value={passwordData.confirmPassword}
-                        onChange={handlePasswordFieldChange}
-                        placeholder="Type your new password again"
-                        className="w-full pl-11 pr-12 py-3.5 bg-gray-50/50 dark:bg-slate-900/50 border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
-                        required
-                        minLength={8}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-                        tabIndex="-1"
-                      >
-                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="pt-4">
-                    <Button type="submit" disabled={savingPassword} className="w-full sm:w-auto px-8 py-3.5 rounded-xl text-base font-semibold shadow-lg shadow-orange-500/25 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]">
-                      {savingPassword ? (
-                        <>
-                          <Loader2 size={18} className="animate-spin" />
-                          Updating Password...
-                        </>
-                      ) : (
-                        "Update Password"
-                      )}
-                    </Button>
-                  </div>
-                </form>
+                </div>
               )}
 
             </div>
@@ -489,6 +631,94 @@ const Profile = () => {
 
         </div>
       </Container>
+
+      {/* Full Screen Image View Modal */}
+      {viewModalOpen && previewImageUrl && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative max-w-3xl w-full flex justify-center items-center">
+            <button 
+              onClick={() => setViewModalOpen(false)} 
+              className="absolute -top-12 right-0 md:-right-12 text-white/70 hover:text-white transition-colors bg-black/50 hover:bg-black/80 rounded-full p-2 backdrop-blur-md"
+            >
+              <X size={32} />
+            </button>
+            <img 
+              src={previewImageUrl} 
+              alt="Profile Full View" 
+              className="max-h-[85vh] w-auto max-w-full object-contain rounded-xl shadow-2xl animate-in zoom-in-95 duration-200" 
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Account Deletion Password Confirmation Modal */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 animate-in zoom-in-95 duration-200 border border-red-100 dark:border-red-900/30">
+            <div className="flex items-center gap-3 text-red-600 dark:text-red-500 mb-4">
+              <AlertTriangle size={28} />
+              <h3 className="text-xl font-bold">Delete Account</h3>
+            </div>
+            
+            <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm leading-relaxed">
+              This action <span className="font-bold text-gray-800 dark:text-gray-200">cannot be undone</span>. Please enter your current password to confirm you want to permanently delete your account.
+            </p>
+            
+            {deleteError && (
+              <div className="mb-6 flex items-center gap-2 rounded-xl bg-red-50 dark:bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/20">
+                <AlertCircle size={18} className="shrink-0" />
+                <p>{deleteError}</p>
+              </div>
+            )}
+
+            <div className="space-y-2 mb-8 group">
+              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">Verify Password</label>
+              <div className="relative">
+                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors" />
+                <Input
+                  type={showDeletePassword ? "text" : "password"}
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className="w-full pl-11 pr-12 py-3.5 bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowDeletePassword(!showDeletePassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                  tabIndex="-1"
+                >
+                  {showDeletePassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => {
+                  setDeleteModalOpen(false);
+                  setDeletePassword("");
+                  setDeleteError("");
+                  setShowDeletePassword(false);
+                }}
+                disabled={deletingAccount}
+                className="px-5 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deletingAccount || !deletePassword}
+                className="px-5 py-2.5 text-sm font-semibold bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-red-500/20"
+              >
+                {deletingAccount ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                Confirm Deletion
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </section>
   );
 };
