@@ -466,7 +466,7 @@ const Dashboard = () => {
                         border-b
                         border-gray-50
                         hover:bg-gray-50/50
-                        transition
+                        transition dark:hover:bg-slate-800/50
                       "
                     >
 
