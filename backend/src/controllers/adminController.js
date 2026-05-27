@@ -433,3 +433,84 @@ export const deleteCategory = async (req, res) => {
     });
   }
 };
+
+
+// =========================================
+// GET ALL USERS
+// =========================================
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const [users] = await query(
+      `
+      SELECT 
+        id, 
+        fullName, 
+        email, 
+        role, 
+        createdAt 
+      FROM users 
+      ORDER BY createdAt DESC
+      `
+    );
+
+    // Returning the array directly to match the React frontend logic
+    return res.json(users);
+  } catch (error) {
+    console.error("Get all users error:", error);
+
+    return res.status(500).json({
+      message: "Unable to load users.",
+    });
+  }
+};
+
+
+// =========================================
+// UPDATE USER ROLE
+// =========================================
+
+export const updateUserRole = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    const allowedRoles = ["user", "admin"];
+
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({
+        message: "Invalid role specified.",
+      });
+    }
+
+    const [users] = await query(
+      "SELECT id FROM users WHERE id = ? LIMIT 1",
+      [id]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({
+        message: "User not found.",
+      });
+    }
+
+    await query(
+      `
+      UPDATE users 
+      SET role = ? 
+      WHERE id = ?
+      `,
+      [role, id]
+    );
+
+    return res.json({
+      message: "User role updated successfully.",
+    });
+  } catch (error) {
+    console.error("Update user role error:", error);
+
+    return res.status(500).json({
+      message: "Unable to update user role.",
+    });
+  }
+};

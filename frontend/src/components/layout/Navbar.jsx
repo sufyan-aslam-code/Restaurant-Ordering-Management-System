@@ -7,17 +7,7 @@ import {
 } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import {
-  Moon,
-  Sun,
-  ShoppingCart,
-  UserCircle,
-  LogOut,
-  Settings,
-  Menu,
-  X,
-  Store
-} from "lucide-react";
+import { Moon, Sun, ShoppingCart, UserCircle, LogOut, Settings, Menu, X } from "lucide-react";
 
 import { ThemeContext } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
@@ -37,7 +27,8 @@ const adminLinks = [
   { id: 5, label: "Dashboard", path: "/admin/dashboard" },
   { id: 6, label: "Manage Foods", path: "/admin/manage-foods" },
   { id: 7, label: "Orders", path: "/admin/orders" },
-  { id: 8, label: "View Store", path: "/menu", icon: Store },
+  { id: 9, label: "Users", path: "/admin/users" }, 
+  { id: 8, label: "Store", path: "/menu" }, 
 ];
 
 const Navbar = () => {

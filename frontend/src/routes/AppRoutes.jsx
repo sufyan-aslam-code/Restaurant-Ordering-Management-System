@@ -29,6 +29,7 @@ import ResetPassword from "../pages/user/ResetPassword";
 import Dashboard from "../pages/admin/Dashboard";
 import Orders from "../pages/admin/Orders";
 import ManageFoods from "../pages/admin/ManageFoods";
+import ManageUsers from "../pages/admin/ManageUsers"; // <-- 1. THIS WAS MISSING
 
 // Support Pages
 import FAQ from "../pages/user/FAQ";
@@ -93,21 +94,22 @@ const router = createBrowserRouter([
   },
 
   // Admin Panel
-{
-  path: "/admin",
-  element: <AdminRoute />,
-  children: [
-    {
-      element: <AdminLayout />,
-      children: [
-        { index: true, element: <Dashboard /> },
-        { path: "dashboard", element: <Dashboard /> },
-        { path: "orders", element: <Orders /> },
-        { path: "manage-foods", element: <ManageFoods /> },
-      ],
-    },
-  ],
-},
+  {
+    path: "/admin",
+    element: <AdminRoute />,
+    children: [
+      {
+        element: <AdminLayout />,
+        children: [
+          { index: true, element: <Dashboard /> },
+          { path: "dashboard", element: <Dashboard /> },
+          { path: "orders", element: <Orders /> },
+          { path: "manage-foods", element: <ManageFoods /> },
+          { path: "users", element: <ManageUsers /> }, // <-- 2. THIS WAS MISSING
+        ],
+      },
+    ],
+  },
 ]);
 
 export default router;

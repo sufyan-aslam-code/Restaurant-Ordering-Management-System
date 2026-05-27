@@ -510,7 +510,7 @@ const Orders = () => {
 
                     <tr
                       key={order.id}
-                      className="transition hover:bg-gray-50/80"
+                      className="transition hover:bg-gray-50/80 dark:hover:bg-slate-800/50"
                     >
 
                       {/* ORDER */}
