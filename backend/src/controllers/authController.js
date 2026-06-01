@@ -364,7 +364,7 @@ export const login = async (req, res) => {
 // =========================================
 export const refresh = async (req, res) => {
   try {
-    const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
+    const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
     if (!refreshToken) {
       return res.status(401).json({ message: "Refresh token is required." });
