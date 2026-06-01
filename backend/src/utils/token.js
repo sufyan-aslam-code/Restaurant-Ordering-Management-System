@@ -22,7 +22,7 @@ export const createRefreshToken = (payload) =>
     payload,
     process.env.JWT_REFRESH_SECRET,
     {
-      expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "7d",
+      expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "14d",
     }
   );
 
