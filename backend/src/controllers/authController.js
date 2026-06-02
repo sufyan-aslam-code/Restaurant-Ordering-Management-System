@@ -46,8 +46,8 @@ const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 
 const refreshCookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
+  secure: true, // MUST be true for cross-domain cookies
+  sameSite: "none", // Allows the cookie to be sent cross-domain
   path: "/",
 };
 
