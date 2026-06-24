@@ -1,5 +1,10 @@
 # 🍽️ Restaurant Ordering & Management System
 
+![React](https://img.shields.io/badge/Frontend-React-blue)
+![Node](https://img.shields.io/badge/Backend-Node.js-green)
+![Database](https://img.shields.io/badge/Database-MySQL-orange)
+![AI](https://img.shields.io/badge/AI-Grok%20LLM-purple)
+
 A full-stack restaurant management and ordering platform built with **React.js, Tailwind CSS, Node.js, Express.js, and MySQL**.
 
 This application provides customer and admin dashboards with features like food management, order processing, secure authentication, AI-powered chatbot assistance, online payments, email services, and cloud-based integrations.
@@ -111,16 +116,25 @@ This application provides customer and admin dashboards with features like food 
 # 📂 Project Architecture
 
 ```
-                React + Tailwind CSS
-                       |
-                       |
-                    REST API
-                       |
-                       |
-              Node.js + Express.js
-                       |
-                       |
-                   MySQL Database
+                                User
+                  |
+                  |
+          React.js + Tailwind CSS
+                  |
+                  |
+            Axios REST API
+                  |
+                  |
+         Node.js + Express.js
+                  |
+    --------------------------------
+    |              |               |
+ MySQL          JWT/Auth        External APIs
+                                |
+                --------------------------------
+                |        |        |        |
+              Grok    Stripe  Cloudinary Brevo
+               AI     Payment   Images   Emails
 ```
 
 ---
@@ -130,7 +144,7 @@ This application provides customer and admin dashboards with features like food 
 ## Clone Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/sufyan-aslam-code/Restaurant-Ordering-Management-System.git
 ```
 
 ---
@@ -217,11 +231,9 @@ Backend APIs include:
 BS Computer Science Student  
 Full Stack Developer
 
-GitHub:  
-https://github.com/sufyan-aslam-code
+GitHub: [sufyan-aslam-code](https://github.com/sufyan-aslam-code)
 
-LinkedIn:  
-https://linkedin.com/in/sufyan-aslam-code
+LinkedIn: [Sufyan Aslam](https://linkedin.com/in/sufyan-aslam-code)
 
 
 ---
