@@ -222,3 +222,34 @@ https://github.com/sufyan-aslam-code
 
 LinkedIn:  
 https://linkedin.com/in/sufyan-aslam-code
+
+
+---
+
+# 📸 Application Screenshots
+
+## 🏠 Home Page
+
+![Home Page](screenshots/home_page.png)
+
+
+## 🍽️ Menu Page
+
+![Menu Page](screenshots/menu_page.png)
+
+
+## 🛒 Shopping Cart & Checkout
+
+![Checkout](screenshots/checkout.png)
+
+
+## 📦 Order Management
+
+![Orders](screenshots/orders.png)
+
+
+## 🛠️ Admin Dashboard
+
+![Admin Dashboard](screenshots/admin_dashboard.png)
+
+---
