@@ -11,6 +11,13 @@ This application provides customer and admin dashboards with features like food 
 
 ---
 
+# 🌐 Live Demo
+
+Frontend:
+https://foodiehub-app.vercel.app/
+
+---
+
 # 🚀 Features
 
 ## 👤 Customer Features
